@@ -48,4 +48,11 @@ WEB页面开启**MQTT自动发现**
 
 3. 峥果浴霸  
 
+# 图片效果 
+![image](https://github.com/qlwz/esp/blob/master/file/images/tab1.png)  
+![image](https://github.com/qlwz/esp/blob/master/file/images/tab2.png)  
+![image](https://github.com/qlwz/esp/blob/master/file/images/tab4.png)  
 
+![image](https://github.com/qlwz/esp/blob/master/file/images/relay.png)  
+![image](https://github.com/qlwz/esp/blob/master/file/images/cover.png)  
+![image](https://github.com/qlwz/esp/blob/master/file/images/zinguo.png)  

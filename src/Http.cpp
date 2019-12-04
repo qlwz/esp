@@ -1,0 +1,836 @@
+#include "Config.h"
+#include "Debug.h"
+#include "Mqtt.h"
+#include "Http.h"
+#include "Wifi.h"
+#include "Led.h"
+#include "template.h"
+#include "Ntp.h"
+#include <ESP8266mDNS.h>
+#include <ESP8266Webserver.h>
+#include <ESP8266HTTPUpdateserver.h>
+
+ESP8266WebServer *Http::server;
+ESP8266HTTPUpdateServer httpUpdater;
+
+boolean Http::isBegin = false;
+
+void Http::handleRoot()
+{
+	if (captivePortal())
+	{
+		return;
+	}
+	if (!checkAuth())
+	{
+		return;
+	}
+
+	server->setContentLength(CONTENT_LENGTH_UNKNOWN);
+	server->send(200, F("text/html"), "");
+	String radioJs = "<script type='text/javascript'>";
+	String page = F("<!DOCTYPE html><html lang='zh-cn'><head><meta charset='utf-8'/><meta name='viewport'content='width=device-width, initial-scale=1, user-scalable=no'/>");
+	page += F("<title>ESP8266(8285)模块</title>");
+	page += F("<style type='text/css'>body{font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif; font-size: 16px; color: #333; line-height: 1.75;} #nav{text-align: center;} #tab > div{display: none;} #nav button{background: #eee; border: 1px solid #ddd; padding: .7em 1em; cursor: pointer; z-index: 1; margin-left: -1px; outline: 0;} #nav .active{background: #fff;} table.gridtable{color: #333333; border-width: 1px; border-color: #ddd; border-collapse: collapse; margin: auto; margin-top: 15px; width: 80%;} table.gridtable th{border-width: 1.5px; padding: 8px; border-style: solid; border-color: #ddd; background-color: #f5f5f5;} table.gridtable td{border-width: 1px; padding: 8px; border-style: solid; border-color: #ddd; background-color: #ffffff;} input,select{border: 1px solid #ccc; padding: 7px 0px; border-radius: 3px; padding-left: 5px; -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075); box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075); -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s; -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s; transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s} input:focus,select:focus{border-color: #66afe9; outline: 0; -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6); box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);} #tab button{color: #fff; border-width: 0px; border-radius: 3px; cursor: pointer; outline: none; font-size: 17px; line-height: 2.4rem;; width: 100%;} #tab button[disabled]{cursor: not-allowed; filter: alpha(opacity=65); -webkit-box-shadow: none; box-shadow: none; opacity: .65;} .btn-info{background-color: #5bc0de; border-color: #46b8da;} .btn-info:hover{background-color: #31b0d5; border-color: #269abc;} .btn-success{background-color: #5cb85c; border-color: #4cae4c;} .btn-success:hover{background-color: #449d44; border-color: #398439;} .btn-danger{background-color: #d9534f; border-color: #d43f3a;} .btn-danger:hover{background-color: #c9302c; border-color: #ac2925;} .alert{width: 80%; padding: 15px; border: 1px solid transparent; border-radius: 4px; position: fixed; top: 10px; left: 10%; z-index: 999999; display: none;} label.bui-radios-label input{position: absolute; opacity: 0; visibility: hidden;} label.bui-radios-label .bui-radios{display: inline-block; position: relative; width: 13px; height: 13px; background: #FFFFFF; border: 1px solid #979797; border-radius: 50%; vertical-align: -2px;} label.bui-radios-label input:checked + .bui-radios:after{position: absolute; content: ''; width: 7px; height: 7px; background-color: #fff; border-radius: 50%; top: 3px; left: 3px;} label.bui-radios-label input:checked + .bui-radios{background: #00B066; border: 1px solid #00B066;} label.bui-radios-label input:disabled + .bui-radios{background-color: #e8e8e8; border: solid 1px #979797;} label.bui-radios-label input:disabled:checked + .bui-radios:after{background-color: #c1c1c1;} label.bui-radios-label .bui-radios{-webkit-transition: background-color ease-out .3s; transition: background-color ease-out .3s;} input[type='range']{width: 80%; height: 10px; border: 0; background-color: #f0f0f0; border-radius: 5px; position: relative; -webkit-appearance: none !important; outline: none;} input[type=range]::-webkit-slider-thumb{-webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #ff4400;} .file{position: relative; display: inline-block; background: #D0EEFF; border: 1px solid #99D3F5; border-radius: 4px; padding: 4px 12px; overflow: hidden; color: #1E88C7; text-decoration: none; text-indent: 0; line-height: 20px;} .file input{position: absolute; font-size: 100px; right: 0; top: 0; opacity: 0;} .file:hover{background: #AADFFD; border-color: #78C3F3; color: #004974; text-decoration: none;}</style>");
+	page += F("<script type='text/javascript'>");
+	page += F("var logIndex=0;var defIntervalTime=3000;var intervalTime=defIntervalTime;var lt;function id(d){return document.getElementById(d)}function tab(v){var divs=id('tab').children;var btns=id('nav').getElementsByTagName('button');for(var i=0;i<divs.length;i++){divs[i].style.display=divs[i]==id('tab'+v)?'block':'none';btns[i].setAttribute('class',(i+1==v?'active':''))}intervalTime=v==5?1000:defIntervalTime}function serialize(form){var field,s='';if(typeof form=='object'&&form.nodeName=='FORM'){for(var i=0;i<form.elements.length;i++){field=form.elements[i];if(field.name&&!field.disabled&&field.type!='file'&&field.type!='reset'&&field.type!='submit'&&field.type!='button'){if((field.type!='checkbox'&&field.type!='radio')||field.checked){s+=field.name+'='+encodeURIComponent(field.value)+'&'}}}}if(s.length>1){s=s.substring(0,s.length-1)}return s}function ajax(){var ajaxData={type:(arguments[0].type||'GET').toUpperCase(),url:arguments[0].url||'',data:arguments[0].data||null,success:arguments[0].success||function(){},error:arguments[0].error||function(){}};var xhr=window.XMLHttpRequest?new XMLHttpRequest():new ActiveXObject('Microsoft.XMLHTTP');xhr.responseType='json';xhr.open(ajaxData.type,ajaxData.url);if(ajaxData.type=='POST'){xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=utf-8');xhr.send(ajaxData.data)}else{xhr.send()}xhr.onreadystatechange=function(){if(xhr.readyState==4){if(xhr.status==200){ajaxData.success(xhr.response)}else{ajaxData.error()}if(ajaxData.url=='/get_status'){lt=setTimeout(get_status,intervalTime)}}}}function toast(msg,duration,isok){var m=id('alert');m.innerHTML=msg;m.style.cssText=isok?'color: #3c763d;background-color: #dff0d8;border-color: #d6e9c6;':'color: #a94442; background-color: #f2dede; border-color: #ebccd1;';m.style.display='block';setTimeout(function(){var d=0.5;m.style.webkitTransition='-webkit-transform '+d+'s ease-in, opacity '+d+'s ease-in';m.style.opacity='0';setTimeout(function(){m.style.display='none'},d*1000)},duration)}function postform(the){ajaxPost(the.getAttribute('action'),serialize(the));return false}function getRadioValue(radioName){var radios=document.getElementsByName(radioName);for(var i=0;i<radios.length;i++){var radio=radios.item(i);if(radio.checked){return radio.value}}return undefined}function setRadioValue(radioName,value){var radios=document.getElementsByName(radioName);for(var i=0;i<radios.length;i++){var radio=radios.item(i);if(radio.value==value){radio.checked=true;return}}}function ajaxPost(url,data,callback){ajax({type:'POST',url:url,dataType:'json',data:data,success:function(data){if(typeof(callback)=='function'){if(callback(data)===true){return}}if(data.msg){toast(data.msg,data.code?3000:5000,data.code)}if(data.data){setData(data.data)}},error:function(){toast('<strong>Oh snap!</strong> 请求出错！',5000,false)}})}function get_status(){clearTimeout(lt);ajaxPost('/get_status','i='+logIndex)}window.addEventListener('load',get_status);");
+	page += F("function setData(data){for(var key in data){if(typeof(setDataSub)=='function'){var result=setDataSub(data,key);if(result){continue}}var v=data[key];if(key=='discovery'){id('discovery').innerHTML=v==1?'已启动':'未启动';id('discovery_btn').setAttribute('class',v==1?'btn-danger':'btn-info');id('discovery_btn').innerHTML=v==1?'关闭MQTT自动发现':'打开MQTT自动发现'}else if(key=='logindex'){logIndex=v}else if(key=='log'){if(v){id('log').value+=v;id('log').scrollTop=99999}}else if(key=='ip'){if(v&&v!=window.location.hostname){toast('连接WiFi成功，IP地址：'+v,5000,1);window.setTimeout('location.href=\\'http://'+v+'\\'',5000)}}else{if(id(key)){id(key).innerHTML=v}else{console.log(key)}}}}");
+	page += F("</script>");
+
+	page += F("</head><body><div id='alert' class='alert'></div>");
+	page += F("<h1 style='text-align:center'>ESP8266(8285)模块</h1>");
+
+	page += F("<div id='nav'>");
+	page += F("<button onclick='tab(1)'class='active'>状态</button>");
+	page += F("<button onclick='tab(2)'>联网</button>");
+	page += F("<button onclick='tab(3)'>控制</button>");
+	page += F("<button onclick='tab(4)'>关于</button>");
+	page += F("<button onclick='tab(5)'>日志</button>");
+	page += F("</div>");
+	server->sendContent(page);
+
+	page = F("<div id='tab'>");
+
+	// TAB 1 Start
+	uint8_t mode = WiFi.getMode();
+	page += F("<div id='tab1' style='display: block;'>");
+	page += F("<table class='gridtable'><thead><tr><th colspan='2'>WiFi状态</th></tr></thead><tbody>");
+	page += F("<tr><td>主机名</td><td>{UID}</td></tr>");
+	page += F("<tr><td>WiFi模式</td><td>");
+	if (mode == WIFI_STA)
+	{
+		page += F("STA");
+	}
+	else if (mode == WIFI_AP)
+	{
+		page += F("AP");
+	}
+	else if (mode == WIFI_AP_STA)
+	{
+		page += F("AP STA");
+	}
+	page += F("</tr>");
+	page += F("<tr><td>SSID</td><td>{SSID}</td></tr>");
+	page += F("<tr><td>RSSI</td><td>{RSSI}dBm</td></tr>");
+	page += F("<tr><td>开机时间</td><td id='uptime'>{uptime}</td></tr>");
+	page += F("<tr><td>可用堆大小</td><td id='free_mem'>{free_mem}</td></tr>");
+	page += F("<tr><td>IP地址</td><td>{localIP}</td></tr>");
+	page += F("<tr><td>DHCP</td><td>{DHCP}</td></tr>");
+	page += F("</tbody></table>");
+	page += F("</div>");
+	page.replace(F("{UID}"), UID);
+	page.replace(F("{SSID}"), WiFi.SSID());
+	page.replace(F("{RSSI}"), String(WiFi.RSSI()));
+	page.replace(F("{uptime}"), Mqtt::msToHumanString(millis()));
+	page.replace(F("{free_mem}"), String(ESP.getFreeHeap()));
+	page.replace(F("{localIP}"), WiFi.localIP().toString());
+	page.replace(F("{DHCP}"), (!config.dhcp_static ? F("DHCP") : F("静态IP")));
+	// TAB 1 End
+
+	server->sendContent(page);
+
+	// TAB 2 Start
+	page = F("<div id='tab2'>");
+	page += F("<form method='post' action='/wifi' onsubmit='postform(this);return false'>");
+	page += F("<table class='gridtable'><thead><tr><th>WiFi名称</th><th>信号</th></tr></thead><tbody>");
+	page += F("<tr id='clusss'><td>WiFi名称</td><td><input type='text' id='wifi_ssid' name='wifi_ssid' placeholder='WiFi名称'></td></tr>");
+	page += F("<tr><td>WiFi密码</td><td><input type='text' name='wifi_password' placeholder='WiFi密码'></td></tr>");
+	page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>连接WiFi</button></td></tr>");
+	page += F("<tr><td colspan='2'><button type='button' class='btn-danger' onclick='scanWifi()'>搜索WiFi</button></td></tr>");
+	page += F("</tbody></table></form>");
+	page += F("<script type='text/javascript'>function clickwifi(t){id('wifi_ssid').value=t.value}function scanWifi(){ajaxPost('scan_wifi','',function(data){if(data.code==1){if(data.data.list.length==0){scanWifi();return;}var trs=document.getElementsByClassName('addwifi');for(var i=trs.length-1;i>=0;i--){trs[i].remove()}for(var a in data.data.list){var w=data.data.list[a];var tr=document.createElement(\"tr\");var td=document.createElement(\"td\");tr.setAttribute('class','addwifi');td.innerHTML=\"<label class='bui-radios-label'><input type='radio' name='wifi' onclick='clickwifi(this)' value='\"+w.name+\"'/><i class='bui-radios'></i> \"+w.name+(w.type==7?' [开放]':'')+\"</label>\";tr.appendChild(td);td=document.createElement(\"td\");td.innerHTML=w.rssi+'dBm '+w.quality+'%';tr.appendChild(td);var oldEle=id('clusss');oldEle.parentNode.insertBefore(tr,oldEle)}}else{toast(data.msg,data.code?3000:5000,data.code)}})}</script>");
+	if (!WiFi.isConnected())
+	{
+		radioJs += "scanWifi();";
+	}
+
+	page += F("<form method='post' action='/dhcp' onsubmit='postform(this);return false'>");
+	page += F("<table class='gridtable'><thead><tr><th colspan='2'>WIFI高级设置</th></tr></thead><tbody>");
+	page += F("<tr><td>DHCP</td><td>");
+	page += F("<label class='bui-radios-label'><input type='radio' name='dhcp' value='1' onchange='dhcponchange(this)'/><i class='bui-radios'></i> DHCP</label>&nbsp;&nbsp;&nbsp;&nbsp;");
+	page += F("<label class='bui-radios-label'><input type='radio' name='dhcp' value='2' onchange='dhcponchange(this)'/><i class='bui-radios'></i> 静态IP</label>");
+	page += F("</td></tr>");
+	radioJs += F("setRadioValue('dhcp', '{v}');");
+	radioJs.replace(F("{v}"), config.dhcp_static ? F("2") : F("1"));
+
+	page += F("<tr class='dhcp_hide'><td>静态IP</td><td><input type='text' name='static_ip' placeholder='静态IP' value='{ip}'></td></tr>");
+	page += F("<tr class='dhcp_hide'><td>子网掩码</td><td><input type='text' name='static_netmask' placeholder='子网掩码' value='{sn}'></td></tr>");
+	page += F("<tr class='dhcp_hide'><td>网关</td><td><input type='text' name='static_gateway' placeholder='网关' value='{gw}'></td></tr>");
+	page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>保存</button></td></tr>");
+	page += F("</tbody></table></form>");
+	page += F("<script type='text/javascript'>function dhcponchange(the){var v=getRadioValue('dhcp');var dom=document.getElementsByClassName('dhcp_hide');for(var i=0;i<dom.length;i++){dom[i].style.display=v==2?'':'none'}}dhcponchange(null);</script>");
+	page.replace(F("{ip}"), config.dhcp_ip);
+	page.replace(F("{sn}"), config.dhcp_sn);
+	page.replace(F("{gw}"), config.dhcp_gw);
+
+	page += F("<form method='post' action='/mqtt' onsubmit='postform(this);return false'>");
+	page += F("<table class='gridtable'><thead><tr><th colspan='2'>MQTT设置</th></tr></thead><tbody>");
+	page += F("<tr><td>地址</td><td><input type='text' name='mqtt_server' placeholder='服务器地址' value='{server}'></td></tr>");
+	page += F("<tr><td>端口</td><td><input type='number' min='0' max='65535' name='mqtt_port' required value='{port}'>&nbsp;&nbsp;&nbsp;&nbsp;0为不启动mqtt</td></tr>");
+	page += F("<tr><td>用户名</td><td><input type='text' name='mqtt_username' placeholder='用户名' value='{user}'></td></tr>");
+	page += F("<tr><td>密码</td><td><input type='password' name='mqtt_password' placeholder='密码' value='{pass}'></td></tr>");
+	page += F("<tr><td>主题</td><td><input type='text' name='mqtt_topic' placeholder='主题' value='{topic}' style='min-width:90%'></td></tr>");
+	page += F("<tr><td>状态</td><td id='mqttconnected'>{mqttconnected}</td></tr>");
+	page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>保存</button></td></tr>");
+	page += F("</tbody></table></form>");
+	page.replace(F("{server}"), config.mqtt_server);
+	page.replace(F("{port}"), String(config.mqtt_port));
+	page.replace(F("{user}"), config.mqtt_user);
+	page.replace(F("{pass}"), config.mqtt_pass);
+	page.replace(F("{topic}"), config.mqtt_topic);
+	page.replace(F("{mqttconnected}"), (mqtt && mqtt->mqttClient.connected() ? F("已连接") : F("未连接")));
+
+	page += F("<form method='post' action='/discovery' onsubmit='postform(this);return false'>");
+	page += F("<table class='gridtable'><thead><tr><th colspan='2'>MQTT自动发现</th></tr></thead><tbody>");
+	page += F("<tr><td>自发现状态</td><td id='discovery'>{discovery}</td></tr>");
+	page += F("<tr><td>自发现前缀</td><td><input type='text' name='discovery_prefix' placeholder='自发现前缀' required value='{prefix}'></td></tr>");
+	page += F("<tr><td colspan='2'><button type='submit' class='btn-info' id='discovery_btn'>打开MQTT自动发现</button></td></tr>");
+	if (config.mqtt_discovery)
+	{
+		radioJs += F("id('discovery_btn').setAttribute('class', 'btn-danger');id('discovery_btn').innerHTML='关闭MQTT自动发现';");
+	}
+	page += F("</tbody></table></form>");
+	page += F("</div>");
+	page.replace(F("{discovery}"), config.mqtt_discovery ? F("已启动") : F("未启动"));
+	page.replace(F("{prefix}"), config.mqtt_discovery_prefix);
+	// TAB 2 End
+
+	// TAB 3 Start
+	page += F("<div id='tab3'>");
+	server->sendContent(page);
+
+	if (module)
+	{
+		module->httpHtml(server);
+	}
+
+	page = F("<form method='post' action='/module_setting' onsubmit='postform(this);return false'>");
+	page += F("<table class='gridtable'><thead><tr><th colspan='2'>模块设置</th></tr></thead><tbody>");
+
+	if (SupportedModules::END > 1)
+	{
+		page += F("<tr><td>模块类型</td><td>");
+		page += F("<select id='module_type' name='module_type' style='width:150px'>");
+		for (int count = 0; count < SupportedModules::END; count++)
+		{
+			page += F("<option value='");
+			page += String(count);
+			page += F("'>");
+			page += Modules[count].name;
+			page += F("</option>");
+		}
+		page += F("</select></td></tr>");
+		radioJs += F("id('module_type').value={v};");
+		radioJs.replace(F("{v}"), String(config.module_type));
+	}
+
+	page += F("<tr><td>日志输出</td><td>");
+	page += F("<label class='bui-radios-label'><input type='checkbox' name='log_serial' value='1'/><i class='bui-radios' style='border-radius:20%'></i> Serial</label>&nbsp;&nbsp;&nbsp;&nbsp;");
+	page += F("<label class='bui-radios-label'><input type='checkbox' name='log_syslog' value='1'/><i class='bui-radios' style='border-radius:20%'></i> syslog</label>&nbsp;&nbsp;&nbsp;&nbsp;");
+	page += F("<label class='bui-radios-label'><input type='checkbox' name='log_web' value='1'/><i class='bui-radios' style='border-radius:20%'></i> web</label>");
+	page += F("</td></tr>");
+	if ((1 & config.debug_type) == 1)
+	{
+		radioJs += F("setRadioValue('log_serial', '1');");
+	}
+	if ((2 & config.debug_type) == 2)
+	{
+		radioJs += F("setRadioValue('log_syslog', '1');");
+	}
+	if ((4 & config.debug_type) == 4)
+	{
+		radioJs += F("setRadioValue('log_web', '1');");
+	}
+
+	page += F("<tr><td>syslog服务器</td><td>");
+	page += F("<input type='text' name='log_syslog_host' style='width:150px' value='{server}'> : <input type='number' name='log_syslog_port' value='{port}' min='0' max='65000' style='width:50px'>");
+	page += F("</td></tr>");
+
+	page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>设置</button></td></tr>");
+	page += F("</tbody></table></form>");
+
+	page += F("<div style='width: 80%; margin: 0 auto'>");
+	page += F("<button type='button' class='btn-danger' style='margin-top: 10px' onclick=\"javascript:if(confirm('确定要重启模块？')){ajaxPost('/restart');}\">重启模块</button>");
+	page += F("<button type='button' class='btn-danger' style='margin-top: 10px' onclick=\"javascript:if(confirm('确定要重置模块？')){ajaxPost('/reset');}\">重置模块</button>");
+	page += F("</div>");
+
+	page.replace(F("{server}"), config.debug_server);
+	page.replace(F("{port}"), String(config.debug_port));
+
+	page += F("</div>");
+	// TAB 3 End
+	server->sendContent(page);
+
+	// TAB 4 Start
+	page = F("<div id='tab4'>");
+	page += F("<table class='gridtable'><thead><tr><th colspan='2'>硬件参数</th></tr></thead><tbody>");
+	page += F("<tr><td>Chip ID</td><td>{getChipId}</td></tr>");
+	page += F("<tr><td>Flash Chip ID</td><td>{getFlashChipId}</td></tr>");
+	page += F("<tr><td>IDE Flash Size</td><td>{getFlashChipSize} bytes</td></tr>");
+	page += F("<tr><td>Real Flash Size</td><td>{getFlashChipRealSize} bytes</td></tr>");
+	page += F("<tr><td>SDK版本</td><td>{getSdkVersion}</td></tr>");
+	page += F("<tr><td>MAC地址</td><td>{macAddress}</td></tr>");
+	page += F("</tbody></table>");
+	page.replace(F("{getChipId}"), String(ESP.getChipId()));
+	page.replace(F("{getFlashChipId}"), String(ESP.getFlashChipId()));
+	page.replace(F("{getFlashChipSize}"), String(ESP.getFlashChipSize()));
+	page.replace(F("{getFlashChipRealSize}"), String(ESP.getFlashChipRealSize()));
+	page.replace(F("{getSdkVersion}"), ESP.getSdkVersion());
+	page.replace(F("{macAddress}"), WiFi.macAddress());
+
+	page += F("<table class='gridtable'><thead><tr><th colspan='2'>固件升级</th></tr></thead><tbody>");
+	page += F("<tr><td>当前版本</td><td>v{v}</td></tr>");
+	page += F("<tr><td>编译时间</td><td>{v1}</td></tr>");
+	page += F("<form method='POST' action='/update' enctype='multipart/form-data'>");
+	page += F("<tr><td colspan='2'><a class='file'><input type='file' name='update'>选择文件</a></td></tr>");
+	page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>升级</button><br>");
+	page += F("</form>");
+	page += F("<tr><td colspan='2' style='text-align:center'>OTA更新</td></tr>");
+	page += F("<form method='POST' action='/ota' onsubmit='postform(this);return false'>");
+	page += F("<tr><td>OTA地址</td><td><input type='text' name='ota_url' placeholder='OTA地址' value='{ota_url}' style='width:90%'></td></tr>");
+	page += F("<tr><td colspan='2'><button type='submit' class='btn-success' style='margin-top: 10px' onclick=\"return confirm('确定要OTA更新？')\">OTA更新</button></td></tr>");
+	page += F("</form>");
+	page += F("</tbody></table>");
+	page += F("</div>");
+	page.replace(F("{v}"), VERSION);
+	page.replace(F("{v1}"), Ntp::GetBuildDateAndTime());
+	page.replace(F("{ota_url}"), config.ota_url);
+	// TAB 4 End
+	server->sendContent(page);
+
+	// TAB 5 Start
+	page = F("<div id='tab5'>");
+	page += F("<div style='text-align:left;display:inline-block;color:#000000;min-width:340px;'><br>");
+	page += F("<textarea readonly id='log' cols='340' wrap='off' style='resize:none;width:98%;height:600px;padding:5px;overflow:auto;background:#ffffff;color:#000000;'></textarea>");
+	page += F("</div></div>");
+	// TAB 5 End
+
+	page += F("</div>");
+	radioJs += F("</script>");
+
+	page += radioJs;
+
+	page += F("</body></html>");
+
+	server->sendContent(page);
+}
+
+void Http::handleMqtt()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	String topic = server->arg(F("mqtt_topic"));
+	if (topic.length() == 0)
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"MQTT主题不能为空\"}"));
+		return;
+	}
+	if (topic.indexOf("%prefix%/") == 0)
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"MQTT主题必须包含【%prefix%/】\"}"));
+		return;
+	}
+	strcpy(config.mqtt_server, server->arg(F("mqtt_server")).c_str());
+	config.mqtt_port = atoi(server->arg(F("mqtt_port")).c_str());
+	strcpy(config.mqtt_user, server->arg(F("mqtt_username")).c_str());
+	strcpy(config.mqtt_pass, server->arg(F("mqtt_password")).c_str());
+	strcpy(config.mqtt_topic, topic.c_str());
+	Config::saveConfig();
+	mqtt->setTopic();
+
+	if (mqtt && mqtt->mqttClient.connected())
+	{
+		mqtt->mqttClient.disconnect();
+	}
+
+	if (mqtt && mqtt->mqttConnect())
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置MQTT服务器成功，已连接。\",\"data\":{\"mqttconnected\":\"已连接\"}}"));
+	}
+	else
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置MQTT服务器成功，未连接。\",\"data\":{\"mqttconnected\":\"未连接\"}}"));
+	}
+}
+
+void Http::handledhcp()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	String ip = server->arg(F("static_ip"));
+	String netmask = server->arg(F("static_netmask"));
+	String gateway = server->arg(F("static_gateway"));
+	if (!Wifi::isIp(ip))
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"IP地址错误\"}"));
+		return;
+	}
+	if (!Wifi::isIp(netmask))
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"掩码地址错误\"}"));
+		return;
+	}
+	if (!Wifi::isIp(gateway))
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"网关地址错误\"}"));
+		return;
+	}
+
+	IPAddress static_ip;
+	IPAddress static_sn;
+	IPAddress static_gw;
+	static_ip.fromString(ip);
+	static_sn.fromString(netmask);
+	static_gw.fromString(gateway);
+
+	if (!(static_ip.isV4() && static_sn.isV4() && (!static_gw.isSet() || static_gw.isV4())))
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"IP地址或者网关错误\"}"));
+		return;
+	}
+
+	if ((static_ip.v4() & static_sn.v4()) != (static_gw.v4() & static_sn.v4()))
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"网段错误\"}"));
+		return;
+	}
+
+	boolean old = config.dhcp_static;
+	config.dhcp_static = server->arg(F("dhcp")).equals(F("2"));
+	strcpy(config.dhcp_ip, ip.c_str());
+	strcpy(config.dhcp_sn, netmask.c_str());
+	strcpy(config.dhcp_gw, gateway.c_str());
+	Config::saveConfig();
+
+	if (old != config.dhcp_static)
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置DHCP信息成功，重启后生效\"}"));
+	}
+	else
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置DHCP信息成功\"}"));
+	}
+}
+
+void Http::handleScanWifi()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	int n = WiFi.scanNetworks();
+	Debug.AddLog(LOG_LEVEL_INFO, PSTR("Scan done"));
+	if (n == 0)
+	{
+		Debug.AddLog(LOG_LEVEL_INFO, PSTR("No networks found"));
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"\",\"data\":{\"list\":[]}}"));
+		//Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"找不到网络，请重新试试。\"}"));
+		return;
+	}
+
+	//sort networks
+	int indices[n];
+	for (int i = 0; i < n; i++)
+	{
+		indices[i] = i;
+	}
+
+	// RSSI排序
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = i + 1; j < n; j++)
+		{
+			if (WiFi.RSSI(indices[j]) > WiFi.RSSI(indices[i]))
+			{
+				std::swap(indices[i], indices[j]);
+			}
+		}
+	}
+
+	// 删除重复项（必须对RSSI进行排序）
+	String cssid;
+	for (int i = 0; i < n; i++)
+	{
+		if (indices[i] == -1)
+			continue;
+		cssid = WiFi.SSID(indices[i]);
+		for (int j = i + 1; j < n; j++)
+		{
+			if (cssid == WiFi.SSID(indices[j]))
+			{
+				Debug.AddLog(LOG_LEVEL_INFO, PSTR("DUP AP: %s"), WiFi.SSID(indices[j]).c_str());
+				indices[j] = -1; // set dup aps to index -1
+			}
+		}
+	}
+
+	String data = "";
+	for (int i = 0; i < n; i++)
+	{
+		if (indices[i] == -1)
+			continue; // skip dups
+		Debug.AddLog(LOG_LEVEL_INFO, PSTR("%s"), WiFi.SSID(indices[i]).c_str());
+		Debug.AddLog(LOG_LEVEL_INFO, PSTR("%d"), WiFi.RSSI(indices[i]));
+		int RSSI = WiFi.RSSI(indices[i]);
+		int quality;
+		if (RSSI <= -100)
+		{
+			quality = 0;
+		}
+		else if (RSSI >= -50)
+		{
+			quality = 100;
+		}
+		else
+		{
+			quality = 2 * (RSSI + 100);
+		}
+		int _minimumQuality = -1;
+		if (_minimumQuality == -1 || _minimumQuality < quality)
+		{
+			data += ",{\"name\":\"" + WiFi.SSID(indices[i]) + "\",\"rssi\":\"" + RSSI + "\",\"quality\":" + quality + ",\"type\":" + WiFi.encryptionType(indices[i]) + "}";
+		}
+		else
+		{
+			Debug.AddLog(LOG_LEVEL_INFO, PSTR("Skipping due to quality"));
+		}
+	}
+
+	Http::server->send(200, F("text/html"), "{\"code\":1,\"msg\":\"\",\"data\":{\"list\":[" + data.substring(1) + "]}}");
+}
+
+void Http::handleWifi()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	String wifi = server->arg(F("wifi_ssid"));
+	if (wifi == "")
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"WiFi名称不能为空。\"}"));
+		return;
+	}
+	String password = server->arg(F("wifi_password"));
+
+	if (WiFi.getMode() == WIFI_STA)
+	{
+		strcpy(config.wifi_ssid, wifi.c_str());
+		strcpy(config.wifi_pass, password.c_str());
+		Config::saveConfig();
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置WiFi信息成功。\"}"));
+	}
+	else
+	{
+		Wifi::tryConnect(wifi, password);
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"尝试将ESP连接到网络。 如果失败，请重新连接到AP再试一次。\"}"));
+	}
+}
+
+void Http::handleDiscovery()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	strcpy(config.mqtt_discovery_prefix, server->arg(F("discovery_prefix")).c_str());
+	config.mqtt_discovery = !config.mqtt_discovery;
+	Config::saveConfig();
+
+	if (module)
+	{
+		module->mqttDiscovery(config.mqtt_discovery);
+	}
+	if (config.mqtt_discovery)
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经打开MQTT自发现。\",\"data\":{\"discovery\":1}}"));
+	}
+	else
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经关闭MQTT自发现。\",\"data\":{\"discovery\":0}}"));
+	}
+}
+
+void Http::handleRestart()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设备正在重启 . . .\"}"));
+	delay(200);
+
+	Led::blinkLED(400, 4);
+	ESP.restart();
+}
+
+void Http::handleReset()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"正在重置模块 . . . 设备将会重启。\"}"));
+	delay(200);
+
+	Led::blinkLED(400, 4);
+
+	Config::resetConfig();
+	Config::saveConfig();
+	ESP.restart();
+}
+
+void Http::handleOTA()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	strcpy(config.ota_url, server->arg(F("ota_url")).c_str());
+	Config::saveConfig();
+	Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"如果成功后设备会重启 . . . \"}"));
+	Wifi::OTA(String(config.ota_url));
+}
+
+void Http::handleNotFound()
+{
+	if (captivePortal())
+	{
+		return;
+	}
+	String message = F("File Not Found\n\n");
+	message += F("URI: ");
+	message += server->uri();
+	message += F("\nMethod: ");
+	message += (server->method() == HTTP_GET) ? F("GET") : F("POST");
+	message += F("\nArguments: ");
+	message += server->args();
+	message += F("\n");
+	for (uint8_t i = 0; i < server->args(); i++)
+	{
+		message += " " + server->argName(i) + ": " + server->arg(i) + "\n";
+	}
+	server->sendHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+	server->sendHeader(F("Pragma"), F("no-cache"));
+	server->sendHeader(F("Expires"), F("-1"));
+	server->sendHeader(F("Content-Length"), String(message.length()));
+	server->send(404, F("text/plain"), message);
+}
+
+void Http::handleGetStatus()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	bool cflg = true;
+	uint8_t counter = 0;
+	if (server->hasArg(F("i")))
+	{
+		counter = server->arg(F("i")).toInt();
+	}
+
+	server->setContentLength(CONTENT_LENGTH_UNKNOWN);
+	server->send(200, F("text/html"), "");
+	String data = F("{\"code\":1,\"msg\":\"\",\"data\":{");
+	data += F("\"mqttconnected\":\"");
+	data += mqtt && mqtt->mqttClient.connected() ? F("已连接") : F("未连接");
+
+	data += F("\",\"discovery\":");
+	data += config.mqtt_discovery ? 1 : 0;
+
+	data += F(",\"uptime\":\"");
+	data += Mqtt::msToHumanString(millis());
+
+	data += F("\",\"ip\":\"");
+	if (Wifi::configPortalStart == 0 && WiFi.isConnected())
+	{
+		data += WiFi.localIP().toString();
+	}
+	else
+	{
+		data += F("");
+	}
+
+	data += F("\",\"free_mem\":");
+	data += ESP.getFreeHeap();
+	data += F(",");
+
+	if (module)
+	{
+		data += module->httpGetStatus(server);
+	}
+
+	data += F(",\"logindex\":");
+	data += Debug.webLogIndex;
+
+	data += F(",\"log\":\"");
+	server->sendContent(data);
+
+	if (counter != Debug.webLogIndex)
+	{
+		if (!counter)
+		{
+			counter = Debug.webLogIndex;
+			cflg = false;
+		}
+		do
+		{
+			char *tmp;
+			uint16_t len;
+			Debug.GetLog(counter, &tmp, &len);
+			if (len)
+			{
+				if (cflg)
+				{
+					server->sendContent("\\n");
+				}
+
+				size_t j = 0;
+				for (size_t i = 0; i < len - 1; i++)
+				{
+					char each = tmp[i];
+					if (each == '\\' || each == '"')
+					{
+						tmpData[j++] = '\\';
+						tmpData[j++] = each;
+					}
+					else if (each == '\b')
+					{
+						tmpData[j++] = '\\';
+						tmpData[j++] = 'b';
+					}
+					else if (each == '\f')
+					{
+						tmpData[j++] = '\\';
+						tmpData[j++] = 'f';
+					}
+					else if (each == '\n')
+					{
+						tmpData[j++] = '\\';
+						tmpData[j++] = 'n';
+					}
+					else if (each == '\r')
+					{
+						tmpData[j++] = '\\';
+						tmpData[j++] = 'r';
+					}
+					else if (each == '\t')
+					{
+						tmpData[j++] = '\\';
+						tmpData[j++] = 't';
+					}
+					else
+					{
+						tmpData[j++] = each;
+					}
+				}
+				tmpData[j++] = '\0';
+
+				server->sendContent(tmpData);
+				cflg = true;
+			}
+			counter++;
+			if (!counter)
+			{
+				counter++;
+			} // Skip log index 0 as it is not allowed
+		} while (counter != Debug.webLogIndex);
+	}
+
+	server->sendContent(F("\"}}"));
+}
+
+void Http::begin()
+{
+	if (isBegin)
+	{
+		return;
+	}
+	isBegin = true;
+	server = new ESP8266WebServer();
+	httpUpdater.setup(server);
+
+	server->on(F("/"), handleRoot);
+	server->on(F("/mqtt"), handleMqtt);
+	server->on(F("/dhcp"), handledhcp);
+	server->on(F("/scan_wifi"), handleScanWifi);
+	server->on(F("/wifi"), handleWifi);
+	server->on(F("/discovery"), handleDiscovery);
+	server->on(F("/restart"), handleRestart);
+	server->on(F("/reset"), handleReset);
+	server->on(F("/module_setting"), handleModuleSetting);
+	server->on(F("/ota"), handleOTA);
+	server->on(F("/get_status"), handleGetStatus);
+	server->onNotFound(handleNotFound);
+
+	if (module)
+	{
+		module->httpAdd(server);
+	}
+	MDNS.begin(UID);
+	server->begin(config.http_port);
+	Debug.AddLog(LOG_LEVEL_INFO, PSTR("HTTP server started port: %d"), config.http_port);
+}
+
+void Http::stop()
+{
+	if (!isBegin)
+	{
+		return;
+	}
+	server->stop();
+	Debug.AddLog(LOG_LEVEL_INFO, PSTR("HTTP server stoped"));
+}
+
+void Http::loop()
+{
+	if (isBegin)
+	{
+		server->handleClient();
+		MDNS.update();
+	}
+}
+
+boolean Http::captivePortal()
+{
+	if (!Wifi::isIp(server->hostHeader()))
+	{
+		//Debug.AddLog(LOG_LEVEL_INFO, PSTR("Request redirected to captive portal"));
+		server->sendHeader(F("Location"), String(F("http://")) + server->client().localIP().toString(), true);
+		server->send(302, F("text/plain"), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
+		server->client().stop();				// Stop is needed because we sent no content length
+		return true;
+	}
+	return false;
+}
+
+void Http::handleModuleSetting()
+{
+	if (!checkAuth())
+	{
+		return;
+	}
+	if (Http::server->hasArg(F("log_serial")) || Http::server->hasArg(F("log_syslog")) || Http::server->hasArg(F("log_web")))
+	{
+		int t = 0;
+		if (Http::server->arg(F("log_serial")).equals(F("1")))
+		{
+			t = t | 1;
+		}
+		if (Http::server->arg(F("log_web")).equals(F("1")))
+		{
+			t = t | 4;
+		}
+
+		String log_syslog = Http::server->arg(F("log_syslog"));
+		if (log_syslog.equals(F("1")))
+		{
+			t = t | 2;
+			String log_syslog_host = Http::server->arg(F("log_syslog_host"));
+			String log_syslog_port = Http::server->arg(F("log_syslog_port"));
+			if (log_syslog_host.length() == 0)
+			{
+				Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"syslog服务器不能为空\"}"));
+				return;
+			}
+			strcpy(config.debug_server, log_syslog_host.c_str());
+			config.debug_port = log_syslog_port.toInt();
+			WiFi.hostByName(config.debug_server, Debug.ip);
+		}
+
+		config.debug_type = t;
+		Config::saveConfig();
+	}
+
+	String type = server->arg(F("module_type"));
+	if (!type.equals(String(config.module_type)))
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经更换模块类型 . . . 正在重启中。\"}"));
+		config.module_type = (SupportedModules)type.toInt();
+		Config::saveConfig();
+		Led::blinkLED(400, 4);
+		ESP.restart();
+	}
+	else
+	{
+		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经修改成功\"}"));
+	}
+}
+
+boolean Http::checkAuth()
+{
+	if (config.http_user[0] != 0 && config.http_pass[0] != 0 && server->client().localIP().toString() != "192.168.4.1")
+	{
+		if (!server->authenticate(config.http_user, config.http_pass))
+		{
+			server->requestAuthentication();
+			return false;
+		}
+	}
+	return true;
+}

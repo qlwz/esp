@@ -12,7 +12,7 @@
 Module *module;
 char UID[16];
 char tmpData[512] = {0};
-uint8_t GPIO_PIN[20];
+uint8_t GPIO_PIN[MAX_GPIO_PIN - MIN_FLASH_PINS];
 uint32_t perSecond;
 Ticker *tickerPerSecond;
 ConfigMessage config;
@@ -38,7 +38,31 @@ uint16_t Config::crc16(uint8_t *ptr, uint16_t len)
 	return crc;
 }
 
-bool Config::resetConfig()
+void Config::loadModule(uint8_t module)
+{
+	for (uint16_t i = 0; i < sizeof(GPIO_PIN); i++)
+	{
+		GPIO_PIN[i] = 99;
+	}
+
+	mytmplt m = Modules[module];
+	uint8_t j = 0;
+	for (uint8_t i = 0; i < sizeof(m.io); i++)
+	{
+		if (6 == i)
+		{
+			j = 9;
+		}
+		if (8 == i)
+		{
+			j = 12;
+		}
+		GPIO_PIN[m.io[i]] = j;
+		j++;
+	}
+}
+
+boolean Config::resetConfig()
 {
 	Debug.AddLog(LOG_LEVEL_INFO, PSTR("resetConfig . . . OK"));
 	memset(&config, 0, sizeof(ConfigMessage));
@@ -62,54 +86,54 @@ bool Config::resetConfig()
 #ifdef MQTT_PASS
 	strcpy(config.mqtt_pass, MQTT_PASS);
 #endif
-	config.mqtt_discovery = false;
-	strcpy(config.mqtt_discovery_prefix, "homeassistant");
+	config.mqtt.discovery = false;
+	strcpy(config.mqtt.discovery_prefix, "homeassistant");
 
 #ifdef MQTT_FULLTOPIC
-	strcpy(config.mqtt_topic, MQTT_FULLTOPIC);
+	strcpy(config.mqtt.topic, MQTT_FULLTOPIC);
 #endif
 #ifdef OTA_URL
-	strcpy(config.ota_url, OTA_URL);
+	strcpy(config.http.ota_url, OTA_URL);
 #endif
-	config.http_port = 80;
+	config.http.port = 80;
 
 #ifdef USE_RELAY
 	config.module_type = SupportedModules::CH3;
 
-	config.relay_led_light = 50;
-	config.relay_led_time = 3;
+	config.relay.led_light = 50;
+	config.relay.led_time = 3;
 #elif defined USE_COVER
 	config.module_type = SupportedModules::HUEX_COVER;
 
-	config.cover_position = 127;
-	config.cover_direction = 127;
-	config.cover_hand_pull = 127;
-	config.cover_weak_switch = 127;
-	config.cover_power_switch = 127;
+	config.cover.position = 127;
+	config.cover.direction = 127;
+	config.cover.hand_pull = 127;
+	config.cover.weak_switch = 127;
+	config.cover.power_switch = 127;
 
 #elif defined USE_ZINGUO
 	config.module_type = SupportedModules::ZINGUO;
 
-	config.zinguo_dual_motor = true;
-	config.zinguo_dual_warm = true;
-	config.zinguo_delay_blow = 30;
-	config.zinguo_linkage = 1;
-	config.zinguo_max_temp = 40;
-	config.zinguo_close_warm = 30;
-	config.zinguo_close_ventilation = 30;
-	config.zinguo_beep = true;
+	config.zinguo.dual_motor = true;
+	config.zinguo.dual_warm = true;
+	config.zinguo.delay_blow = 30;
+	config.zinguo.linkage = 1;
+	config.zinguo.max_temp = 40;
+	config.zinguo.close_warm = 30;
+	config.zinguo.close_ventilation = 30;
+	config.zinguo.beep = true;
 #else
 #error "not support module"
 #endif
 
-	config.debug_type = 1;
+	config.debug.type = 1;
 	return true;
 }
 
-bool Config::readConfig(bool isErrorReset)
+boolean Config::readConfig(boolean isErrorReset)
 {
 	uint16 len;
-	bool status = false;
+	boolean status = false;
 	uint16 cfg = (EEPROM.read(0) << 8 | EEPROM.read(1));
 	if (cfg == CFG_HOLDER)
 	{
@@ -135,16 +159,16 @@ bool Config::readConfig(bool isErrorReset)
 			memset(&config, 0, sizeof(ConfigMessage));
 			pb_istream_t stream = pb_istream_from_buffer(buffer, len);
 			status = pb_decode(&stream, ConfigMessage_fields, &config);
-			if (config.http_port == 0)
+			if (config.http.port == 0)
 			{
-				config.http_port = 80;
+				config.http.port = 80;
 			}
 		}
 	}
 
 	if (!status)
 	{
-		config.debug_type = 1;
+		config.debug.type = 1;
 		Debug.AddLog(LOG_LEVEL_INFO, PSTR("readConfig . . . Error"));
 		if (isErrorReset)
 		{
@@ -155,15 +179,19 @@ bool Config::readConfig(bool isErrorReset)
 		return false;
 	}
 
+	if (config.module_type >= SupportedModules::END)
+	{
+		config.module_type = 0;
+	}
 	Debug.AddLog(LOG_LEVEL_INFO, PSTR("readConfig . . . OK Len: %d"), len);
 	return true;
 }
 
-bool Config::saveConfig()
+boolean Config::saveConfig()
 {
 	uint8_t buffer[ConfigMessage_size];
 	pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-	bool status = pb_encode(&stream, ConfigMessage_fields, &config);
+	boolean status = pb_encode(&stream, ConfigMessage_fields, &config);
 	size_t len = stream.bytes_written;
 	if (!status)
 	{
@@ -200,7 +228,7 @@ void Config::perSecondDo()
 	}
 	uint8_t buffer[ConfigMessage_size];
 	pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-	bool status = pb_encode(&stream, ConfigMessage_fields, &config);
+	boolean status = pb_encode(&stream, ConfigMessage_fields, &config);
 	size_t len = stream.bytes_written;
 	if (!status)
 	{

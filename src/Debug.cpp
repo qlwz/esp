@@ -45,16 +45,16 @@ void DebugClass::GetLog(uint8_t idx, char **entry_pp, uint16_t *len_p)
 
 void DebugClass::Syslog()
 {
-	if ((2 & config.debug_type) != 2 || WiFi.status() != WL_CONNECTED || config.debug_server[0] == '\0' || config.debug_port == 0)
+	if ((2 & config.debug.type) != 2 || WiFi.status() != WL_CONNECTED || config.debug.server[0] == '\0' || config.debug.port == 0)
 	{
 		return;
 	}
 
 	if (!ip)
 	{
-		WiFi.hostByName(config.debug_server, ip);
+		WiFi.hostByName(config.debug.server, ip);
 	}
-	if (Udp.beginPacket(ip, config.debug_port))
+	if (Udp.beginPacket(ip, config.debug.port))
 	{
 		char syslog_preamble[64]; // Hostname + Id
 
@@ -73,7 +73,7 @@ void DebugClass::AddLog(uint8_t loglevel)
 	char mxtime[10]; // "13:45:21 "
 	snprintf_P(mxtime, sizeof(mxtime), PSTR("%02d:%02d:%02d "), Ntp::rtcTime.hour, Ntp::rtcTime.minute, Ntp::rtcTime.second);
 
-	if ((1 & config.debug_type) == 1)
+	if ((1 & config.debug.type) == 1)
 	{
 		Serial.printf("%s%s\r\n", mxtime, tmpData);
 	}
@@ -82,7 +82,7 @@ void DebugClass::AddLog(uint8_t loglevel)
 	//{
 	// Delimited, zero-terminated buffer of log lines.
 	// Each entry has this format: [index][log data]['\1']
-	if ((4 & config.debug_type) == 4)
+	if ((4 & config.debug.type) == 4)
 	{
 		if (!webLogIndex)
 			webLogIndex++;											 // Index 0 is not allowed as it is the end of char string

@@ -32,6 +32,10 @@ void callback(char *topic, byte *payload, unsigned int length)
 	{
 		Wifi::OTA(str.endsWith(F(".bin")) ? str : OTA_URL);
 	}
+	else if (topicStr.endsWith(F("/restart")))
+	{
+		ESP.reset();
+	}
 	else if (module)
 	{
 		module->mqttCallback(topicStr, str);
@@ -56,65 +60,29 @@ void tickerPerSecondDo()
 	Ntp::perSecondDo();
 
 	Config::perSecondDo();
-	if (mqtt)
-	{
-		mqtt->perSecondDo();
-	}
-	if (module)
-	{
-		module->perSecondDo();
-	}
+	mqtt->perSecondDo();
+	module->perSecondDo();
 }
 
 void setup()
 {
 	sprintf(UID, HOST_PREFIX, ESP.getChipId());
 	Serial.begin(115200);
-	EEPROM.begin(ConfigMessage_size + 6);
-	config.debug_type = 1;
+	EEPROM.begin(ConfigMessage_size);
+	config.debug.type = 1;
 	Config::readConfig();
 	Debug.AddLog(LOG_LEVEL_INFO, PSTR("---------------------  v%s  %s  -------------------"), VERSION, Ntp::GetBuildDateAndTime().c_str());
 	Debug.AddLog(LOG_LEVEL_INFO, PSTR("UID: %s"), UID);
-	Debug.AddLog(LOG_LEVEL_INFO, PSTR("Config Len: %d"), ConfigMessage_size + 6);
+	Debug.AddLog(LOG_LEVEL_INFO, PSTR("Config Len: %d"), ConfigMessage_size);
 	//Config::resetConfig();
 	if (MQTT_MAX_PACKET_SIZE == 128)
 	{
 		Debug.AddLog(LOG_LEVEL_INFO, PSTR("WRONG PUBSUBCLIENT LIBRARY USED PLEASE INSTALL THE ONE FROM OMG LIB FOLDER"));
 	}
 
-	for (uint16_t i = 0; i < sizeof(GPIO_PIN); i++)
-	{
-		GPIO_PIN[i] = 99;
-	}
-
-	mytmplt m = Modules[config.module_type];
-	uint8_t j = 0;
-	for (uint8_t i = 0; i < sizeof(m.io); i++)
-	{
-		if (6 == i)
-		{
-			j = 9;
-		}
-		if (8 == i)
-		{
-			j = 12;
-		}
-		GPIO_PIN[m.io[i]] = j;
-		//Debug.printf("F %d %d \n", m.io[i], j);
-
-		if (m.io[i] == GPIO_LED_POWER)
-		{
-			Led::init(j, HIGH);
-		}
-		else if (m.io[i] == GPIO_LED_POWER_INV)
-		{
-			Led::init(j, LOW);
-		}
-		j++;
-	}
-
+	Config::loadModule(config.module_type);
+	
 	mqtt = new Mqtt();
-
 #ifdef USE_RELAY
 	module = new Relay();
 #elif defined USE_COVER
@@ -125,13 +93,13 @@ void setup()
 #error "No CLASS"
 #endif
 
-	if (!module)
+	if (GPIO_PIN[GPIO_LED_POWER] != 99)
 	{
-		Debug.AddLog(LOG_LEVEL_INFO, PSTR("NO MODULE"));
-		Config::resetConfig();
-		Config::saveConfig();
-		ESP.reset();
-		return;
+		Led::init(GPIO_PIN[GPIO_LED_POWER], HIGH);
+	}
+	else if (GPIO_PIN[GPIO_LED_POWER_INV] != 99)
+	{
+		Led::init(GPIO_PIN[GPIO_LED_POWER_INV], LOW);
 	}
 
 	tickerPerSecond = new Ticker();
@@ -140,7 +108,6 @@ void setup()
 	Wifi::connectWifi();
 	Ntp::init();
 
-	mqtt->setTopic();
 	mqtt->setClient(Wifi::wifiClient);
 	mqtt->mqttSetConnectedCallback(connectedCallback);
 	mqtt->mqttSetLoopCallback(callback);
@@ -149,14 +116,8 @@ void setup()
 void loop()
 {
 	Led::loop();
-	if (mqtt)
-	{
-		mqtt->loop();
-	}
-	if (module)
-	{
-		module->loop();
-	}
+	mqtt->loop();
+	module->loop();
 	Wifi::loop();
 	Http::loop();
 }

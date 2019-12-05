@@ -30,10 +30,10 @@ void RadioReceive::del(uint8_t ch)
 
 void RadioReceive::delAll()
 {
-	config.relay_study_index[0] = 0;
-	config.relay_study_index[1] = 0;
-	config.relay_study_index[2] = 0;
-	config.relay_study_index[3] = 0;
+	config.relay.study_index[0] = 0;
+	config.relay.study_index[1] = 0;
+	config.relay.study_index[2] = 0;
+	config.relay.study_index[3] = 0;
 	Config::saveConfig();
 	Debug.AddLog(LOG_LEVEL_INFO, PSTR("Receive delAll . . . "));
 }
@@ -78,10 +78,10 @@ void RadioReceive::loop()
 		for (size_t ch = 0; ch < relay->channels; ch++)
 		{
 			//Debug.AddLog(LOG_LEVEL_INFO, PSTR("study channel %d index %d"), ch, config.relay_study_index[ch]);
-			for (size_t i = 0; i < config.relay_study_index[ch]; i++)
+			for (size_t i = 0; i < config.relay.study_index[ch]; i++)
 			{
 				//Debug.AddLog(LOG_LEVEL_INFO, PSTR("study id %d"), (ch * 10) + i);
-				if (config.relay_study[(ch * 10) + i] == value)
+				if (config.relay.study[(ch * 10) + i] == value)
 				{
 					isOk = true;
 					Debug.AddLog(LOG_LEVEL_INFO, PSTR("Received %d to channel %d"), value, ch + 1);
@@ -100,16 +100,16 @@ void RadioReceive::loop()
 	{
 		uint8_t ch = studyCH - 20;
 
-		uint8_t index = config.relay_study_index[ch];
+		uint8_t index = config.relay.study_index[ch];
 		for (int i = 0; i <= index; ++i)
 		{
-			if (config.relay_study[(ch * 10) + i] == value)
+			if (config.relay.study[(ch * 10) + i] == value)
 			{
 				for (int j = i; j <= index - 1; j++)
 				{
-					config.relay_study[(ch * 10) + j] = config.relay_study[(ch * 10) + (j + 1)];
+					config.relay.study[(ch * 10) + j] = config.relay.study[(ch * 10) + (j + 1)];
 				}
-				config.relay_study_index[ch] = --index;
+				config.relay.study_index[ch] = --index;
 				Config::saveConfig();
 			}
 		}
@@ -121,11 +121,11 @@ void RadioReceive::loop()
 	else if (studyCH >= 10) // 学习
 	{
 		uint8_t ch = studyCH - 10;
-		uint8_t index = config.relay_study_index[ch];
+		uint8_t index = config.relay.study_index[ch];
 		Debug.AddLog(LOG_LEVEL_INFO, PSTR("study index %d %d"), ch, index);
 		for (uint8_t i = 0; i < index; i++)
 		{
-			if (config.relay_study[(ch * 10) + i] == value)
+			if (config.relay.study[(ch * 10) + i] == value)
 			{
 				Debug.AddLog(LOG_LEVEL_INFO, PSTR("Received %d study to channel %d is has"), value, (ch) + 1);
 				studyCH = 0;
@@ -137,14 +137,14 @@ void RadioReceive::loop()
 		{
 			for (int j = 0; j < index - 1; j++)
 			{
-				config.relay_study[(ch * 10) + j] = config.relay_study[(ch * 10) + (j + 1)];
+				config.relay.study[(ch * 10) + j] = config.relay.study[(ch * 10) + (j + 1)];
 			}
-			config.relay_study[(ch * 10) + (MAX_STUDY_RECEIVER_NUM - 1)] = value;
+			config.relay.study[(ch * 10) + (MAX_STUDY_RECEIVER_NUM - 1)] = value;
 		}
 		else
 		{
-			config.relay_study[(ch * 10) + index] = value;
-			config.relay_study_index[ch] = ++index;
+			config.relay.study[(ch * 10) + index] = value;
+			config.relay.study_index[ch] = ++index;
 		}
 		Config::saveConfig();
 

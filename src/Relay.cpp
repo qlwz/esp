@@ -64,7 +64,7 @@ void Relay::ledPWM(uint8_t ch, bool isOn)
 	{
 		if (!ledTicker->active())
 		{
-			ledTicker->attach_ms(config.relay_led_time, std::bind(&Relay::ledTickerHandle, this));
+			ledTicker->attach_ms(config.relay.led_time, std::bind(&Relay::ledTickerHandle, this));
 			Debug.AddLog(LOG_LEVEL_INFO, PSTR("ledTicker active"));
 		}
 	}
@@ -72,17 +72,17 @@ void Relay::ledPWM(uint8_t ch, bool isOn)
 
 void Relay::led(uint8_t ch, bool isOn)
 {
-	if (config.relay_led_type == 0 || GPIO_PIN[GPIO_LED1 + ch] == 99)
+	if (config.relay.led_type == 0 || GPIO_PIN[GPIO_LED1 + ch] == 99)
 	{
 		return;
 	}
 
-	if (config.relay_led_type == 1)
+	if (config.relay.led_type == 1)
 	{
 		//digitalWrite(GPIO_PIN[GPIO_LED1 + ch], isOn ? LOW : HIGH);
 		analogWrite(GPIO_PIN[GPIO_LED1 + ch], isOn ? 0 : ledLight);
 	}
-	else if (config.relay_led_type == 2)
+	else if (config.relay.led_type == 2)
 	{
 		ledPWM(ch, isOn);
 	}
@@ -91,16 +91,16 @@ void Relay::led(uint8_t ch, bool isOn)
 boolean Relay::checkCanLed(boolean re)
 {
 	boolean result;
-	if (config.relay_led_start != config.relay_led_end && Ntp::rtcTime.valid)
+	if (config.relay.led_start != config.relay.led_end && Ntp::rtcTime.valid)
 	{
 		uint16_t nowTime = Ntp::rtcTime.hour * 100 + Ntp::rtcTime.minute;
-		if (config.relay_led_start > config.relay_led_end) // 开始时间大于结束时间 跨日
+		if (config.relay.led_start > config.relay.led_end) // 开始时间大于结束时间 跨日
 		{
-			result = (nowTime >= config.relay_led_start || nowTime < config.relay_led_end);
+			result = (nowTime >= config.relay.led_start || nowTime < config.relay.led_end);
 		}
 		else
 		{
-			result = (nowTime >= config.relay_led_start && nowTime < config.relay_led_end);
+			result = (nowTime >= config.relay.led_start && nowTime < config.relay.led_end);
 		}
 	}
 	else
@@ -109,7 +109,7 @@ boolean Relay::checkCanLed(boolean re)
 	}
 	if (result != Relay::canLed || re)
 	{
-		if ((!result || config.relay_led_type != 2) && ledTicker && ledTicker->active())
+		if ((!result || config.relay.led_type != 2) && ledTicker && ledTicker->active())
 		{
 			ledTicker->detach();
 			Debug.AddLog(LOG_LEVEL_INFO, PSTR("ledTicker detach2"));
@@ -120,7 +120,7 @@ boolean Relay::checkCanLed(boolean re)
 		{
 			if (GPIO_PIN[GPIO_LED1 + ch] != 99)
 			{
-				result &&config.relay_led_type != 0 ? led(ch, lastState[ch]) : analogWrite(GPIO_PIN[GPIO_LED1 + ch], 0);
+				result &&config.relay.led_type != 0 ? led(ch, lastState[ch]) : analogWrite(GPIO_PIN[GPIO_LED1 + ch], 0);
 			}
 		}
 	}
@@ -140,11 +140,12 @@ void Relay::switchRelay(uint8_t ch, bool isOn, bool isSave)
 	lastState[ch] = isOn;
 	digitalWrite(GPIO_PIN[GPIO_REL1 + ch], isOn ? HIGH : LOW);
 
-	mqtt->publish(Relay::channels == 1 ? powerTopic : (powerTopic + (ch + 1)), isOn ? "ON" : "OFF", config.mqtt_retain);
+	mqtt->publish(Relay::channels == 1 ? powerTopic : (powerTopic + (ch + 1)), isOn ? "ON" : "OFF", config.mqtt.retain);
 
-	if (isSave && config.relay_power_on_state > 0)
+	if (isSave && config.relay.power_on_state > 0)
 	{
-		config.relay_last_state[ch] = isOn;
+		bitWrite(config.relay.last_state, ch, isOn);
+		//config.relay.last_state[ch] = isOn;
 	}
 	if (Relay::canLed)
 	{
@@ -197,15 +198,15 @@ void Relay::handleRadioReceive(ESP8266WebServer *server)
 	String c = server->arg(F("c"));
 	if (c == F("0"))
 	{
-		config.relay_study_index[0] = 0;
-		config.relay_study_index[1] = 0;
-		config.relay_study_index[2] = 0;
-		config.relay_study_index[3] = 0;
+		config.relay.study_index[0] = 0;
+		config.relay.study_index[1] = 0;
+		config.relay.study_index[2] = 0;
+		config.relay.study_index[3] = 0;
 		Config::saveConfig();
 	}
 	else if (c == F("1") || c == F("2") || c == F("3") || c == F("4"))
 	{
-		config.relay_study_index[c.toInt() - 1] = 0;
+		config.relay.study_index[c.toInt() - 1] = 0;
 		Config::saveConfig();
 	}
 	else
@@ -223,16 +224,16 @@ void Relay::handleRelaySetting(ESP8266WebServer *server)
 		String powerOnState = server->arg(F("power_on_state"));
 		if (powerOnState != F("0") || powerOnState != F("1") || powerOnState != F("2") || powerOnState != F("3"))
 		{
-			config.relay_power_on_state = powerOnState.toInt();
+			config.relay.power_on_state = powerOnState.toInt();
 		}
 	}
 
 	if (server->hasArg(F("led_type")))
 	{
 		String ledType = server->arg(F("led_type"));
-		config.relay_led_type = ledType.toInt();
+		config.relay.led_type = ledType.toInt();
 
-		if (config.relay_led_type == 2 && !ledTicker)
+		if (config.relay.led_type == 2 && !ledTicker)
 		{
 			ledTicker = new Ticker();
 		}
@@ -241,18 +242,18 @@ void Relay::handleRelaySetting(ESP8266WebServer *server)
 	{
 		String ledStart = server->arg(F("led_start"));
 		String ledEnd = server->arg(F("led_end"));
-		config.relay_led_start = ledStart.toInt();
-		config.relay_led_end = ledEnd.toInt();
+		config.relay.led_start = ledStart.toInt();
+		config.relay.led_end = ledEnd.toInt();
 	}
 	if (server->hasArg(F("led_light")))
 	{
-		config.relay_led_light = server->arg(F("led_light")).toInt();
-		ledLight = config.relay_led_light * 10 + 23;
+		config.relay.led_light = server->arg(F("led_light")).toInt();
+		ledLight = config.relay.led_light * 10 + 23;
 	}
 	if (server->hasArg(F("relay_led_time")))
 	{
-		config.relay_led_time = server->arg(F("relay_led_time")).toInt();
-		if (config.relay_led_type == 2 && ledTicker->active())
+		config.relay.led_time = server->arg(F("relay_led_time")).toInt();
+		if (config.relay.led_type == 2 && ledTicker->active())
 		{
 			ledTicker->detach();
 		}
@@ -265,16 +266,16 @@ void Relay::handleRelaySetting(ESP8266WebServer *server)
 
 Relay::Relay()
 {
-	if (config.relay_led_light == 0)
+	if (config.relay.led_light == 0)
 	{
-		config.relay_led_light = 100;
+		config.relay.led_light = 100;
 	}
-	if (config.relay_led_time == 0)
+	if (config.relay.led_time == 0)
 	{
-		config.relay_led_time = 2;
+		config.relay.led_time = 2;
 	}
-	ledLight = config.relay_led_light * 10 + 23;
-	if (config.relay_led_type == 2)
+	ledLight = config.relay.led_light * 10 + 23;
+	if (config.relay.led_type == 2)
 	{
 		ledTicker = new Ticker();
 	}
@@ -304,17 +305,17 @@ Relay::Relay()
 		}
 
 		// 0:开关通电时断开  1 : 开关通电时闭合  2 : 开关通电时状态与断电前相反  3 : 开关通电时保持断电前状态
-		if (config.relay_power_on_state == 2)
+		if (config.relay.power_on_state == 2)
 		{
-			switchRelay(ch, !config.relay_last_state[ch], false); // 开关通电时状态与断电前相反
+			switchRelay(ch, !bitRead(config.relay.last_state, ch), false); // 开关通电时状态与断电前相反
 		}
-		else if (config.relay_power_on_state == 3)
+		else if (config.relay.power_on_state == 3)
 		{
-			switchRelay(ch, config.relay_last_state[ch], false); // 开关通电时保持断电前状态
+			switchRelay(ch, bitRead(config.relay.last_state, ch), false); // 开关通电时保持断电前状态
 		}
 		else
 		{
-			switchRelay(ch, config.relay_power_on_state == 1, false); // 开关通电时闭合
+			switchRelay(ch, config.relay.power_on_state == 1, false); // 开关通电时闭合
 		}
 	}
 
@@ -348,7 +349,7 @@ void Relay::mqttDiscovery(boolean isEnable)
 	String tmp = mqtt->getCmndTopic(F("POWER"));
 	for (size_t ch = 0; ch < Relay::channels; ch++)
 	{
-		sprintf(topic, "%s/light/%s_%d/config", config.mqtt_discovery_prefix, UID, (ch + 1));
+		sprintf(topic, "%s/light/%s_%d/config", config.mqtt.discovery_prefix, UID, (ch + 1));
 		if (isEnable)
 		{
 			sprintf(message, HASS_DISCOVER_RELAY, UID, (ch + 1),
@@ -368,7 +369,7 @@ void Relay::mqttDiscovery(boolean isEnable)
 void Relay::mqttConnected()
 {
 	powerTopic = mqtt->getStatTopic(F("POWER"));
-	if (config.mqtt_discovery)
+	if (config.mqtt.discovery)
 	{
 		mqttDiscovery(true);
 		mqtt->doReport();
@@ -432,7 +433,7 @@ void Relay::httpHtml(ESP8266WebServer *server)
 	page += F("<label class='bui-radios-label'><input type='radio' name='power_on_state' value='3'/><i class='bui-radios'></i> 开关通电时保持断电前状态</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('power_on_state', '{v}');");
-	radioJs.replace(F("{v}"), String(config.relay_power_on_state));
+	radioJs.replace(F("{v}"), String(config.relay.power_on_state));
 
 	if (GPIO_PIN[GPIO_LED1] != 99)
 	{
@@ -443,14 +444,14 @@ void Relay::httpHtml(ESP8266WebServer *server)
 		//page += F("<label class='bui-radios-label'><input type='radio' name='led_type' value='3'/><i class='bui-radios'></i> WS2812</label>");
 		page += F("</td></tr>");
 		radioJs += F("setRadioValue('led_type', '{v}');");
-		radioJs.replace(F("{v}"), String(config.relay_led_type));
+		radioJs.replace(F("{v}"), String(config.relay.led_type));
 
 		page += F("<tr><td>指示灯亮度</td><td><input type='range' min='1' max='100' name='led_light' value='{led_light}' onchange='ledLightRangOnChange(this)'/>&nbsp;<span>{led_light}%</span></td></tr>");
-		page.replace("{led_light}", String(config.relay_led_light));
+		page.replace("{led_light}", String(config.relay.led_light));
 		radioJs += F("function ledLightRangOnChange(the){the.nextSibling.nextSibling.innerHTML=the.value+'%'};");
 
 		page += F("<tr><td>渐变时间</td><td><input type='number' name='relay_led_time' value='{v}'>毫秒</td></tr>");
-		page.replace(F("{v}"), String(config.relay_led_time));
+		page.replace(F("{v}"), String(config.relay.led_time));
 
 		String tmp = "";
 		for (uint8_t i = 0; i <= 23; i++)
@@ -473,8 +474,8 @@ void Relay::httpHtml(ESP8266WebServer *server)
 
 		radioJs += F("id('led_start').value={v1};");
 		radioJs += F("id('led_end').value={v2};");
-		radioJs.replace(F("{v1}"), String(config.relay_led_start));
-		radioJs.replace(F("{v2}"), String(config.relay_led_end));
+		radioJs.replace(F("{v1}"), String(config.relay.led_start));
+		radioJs.replace(F("{v2}"), String(config.relay.led_end));
 		page += F("</td></tr>");
 	}
 	if (radioReceive)

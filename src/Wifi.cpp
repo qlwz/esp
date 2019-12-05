@@ -44,7 +44,7 @@ void Wifi::OTA(String url)
 void Wifi::connectWifi()
 {
 	delay(50);
-	if (config.wifi_ssid[0] != '\0')
+	if (config.wifi.ssid[0] != '\0')
 	{
 		setupWifi();
 	}
@@ -63,27 +63,27 @@ void Wifi::setupWifi()
 	WiFi.setAutoConnect(true);
 	WiFi.setAutoReconnect(true);
 	WiFi.hostname(UID);
-	Debug.AddLog(LOG_LEVEL_INFO, PSTR("Connecting to %s %s Wifi"), config.wifi_ssid, config.wifi_pass);
+	Debug.AddLog(LOG_LEVEL_INFO, PSTR("Connecting to %s %s Wifi"), config.wifi.ssid, config.wifi.pass);
 	STAGotIP = WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP &event) {
 		Debug.AddLog(LOG_LEVEL_INFO, PSTR("WiFi1 connected. SSID: %s IP address: %s"), WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
-		if (config.dhcp_static && String(config.dhcp_ip).equals(WiFi.localIP().toString()))
+		if (config.wifi.is_static && String(config.wifi.ip).equals(WiFi.localIP().toString()))
 		{
 			isDHCP = false;
 		}
 	});
-	if (config.dhcp_static)
+	if (config.wifi.is_static)
 	{
 		isDHCP = false;
 		IPAddress static_ip;
 		IPAddress static_sn;
 		IPAddress static_gw;
-		static_ip.fromString(config.dhcp_ip);
-		static_sn.fromString(config.dhcp_sn);
-		static_gw.fromString(config.dhcp_gw);
-		Debug.AddLog(LOG_LEVEL_INFO, PSTR("Custom STA IP/GW/Subnet: %s %s %s"), config.dhcp_ip, config.dhcp_sn, config.dhcp_gw);
+		static_ip.fromString(config.wifi.ip);
+		static_sn.fromString(config.wifi.sn);
+		static_gw.fromString(config.wifi.gw);
+		Debug.AddLog(LOG_LEVEL_INFO, PSTR("Custom STA IP/GW/Subnet: %s %s %s"), config.wifi.ip, config.wifi.sn, config.wifi.gw);
 		WiFi.config(static_ip, static_gw, static_sn);
 	}
-	WiFi.begin(config.wifi_ssid, config.wifi_pass);
+	WiFi.begin(config.wifi.ssid, config.wifi.pass);
 }
 
 void Wifi::setupWifiManager(bool resetSettings)
@@ -155,8 +155,8 @@ void Wifi::loop()
 
 	if (_ssid.length() > 0 && WiFi.isConnected())
 	{
-		strcpy(config.wifi_ssid, _ssid.c_str());
-		strcpy(config.wifi_pass, _pass.c_str());
+		strcpy(config.wifi.ssid, _ssid.c_str());
+		strcpy(config.wifi.pass, _pass.c_str());
 		Config::saveConfig();
 
 		//	为了使WEB获取到IP 2秒后才关闭AP

@@ -87,7 +87,7 @@ void Cover::handleCoverSetting(ESP8266WebServer *server)
 
 	if (server->hasArg(F("weak_switch")))
 	{
-		config.cover_weak_switch == 127;
+		config.cover.weak_switch == 127;
 		String weakSwitch = server->arg(F("weak_switch"));
 		len = DOOYACommand::setWeakSwitchType(tmp, 0xFEFE, 0, weakSwitch.equals(F("2")) ? 0x02 : (weakSwitch.equals(F("3")) ? 0x03 : (weakSwitch.equals(F("4")) ? 0x04 : 0x01)));
 		softwareSerial->write(tmp, len);
@@ -96,7 +96,7 @@ void Cover::handleCoverSetting(ESP8266WebServer *server)
 
 	if (server->hasArg(F("power_switch")))
 	{
-		config.cover_power_switch == 127;
+		config.cover.power_switch == 127;
 		String powerSwitch = server->arg(F("power_switch"));
 		len = DOOYACommand::setPowerSwitchType(tmp, 0xFEFE, 0, powerSwitch.equals(F("1")) ? 0x01 : (powerSwitch.equals(F("2")) ? 0x02 : 0x00));
 		softwareSerial->write(tmp, len);
@@ -117,11 +117,11 @@ void Cover::handleCoverReset(ESP8266WebServer *server)
 	DOOYACommand::reset(tmp, 0xFEFE, 0);
 	softwareSerial->write(tmp, len);
 	delay(100);
-	config.cover_position = 127;
-	config.cover_direction = 127;
-	config.cover_hand_pull = 127;
-	config.cover_weak_switch = 127;
-	config.cover_power_switch = 127;
+	config.cover.position = 127;
+	config.cover.direction = 127;
+	config.cover.hand_pull = 127;
+	config.cover.weak_switch = 127;
+	config.cover.power_switch = 127;
 	Config::saveConfig();
 	ESP.restart();
 }
@@ -241,34 +241,34 @@ void Cover::doPosition(uint8_t position, uint8_t command)
 			uint8_t len2 = DOOYACommand::open(tmp, 0xFEFE, 0);
 			softwareSerial->write(tmp, len2);
 			getPositionState = true;
-			if (config.cover_position > 127)
+			if (config.cover.position > 127)
 			{
-				config.cover_position = 100;
+				config.cover.position = 100;
 			}
-			Debug.AddLog(LOG_LEVEL_INFO, PSTR("Start Auto Stroke: Last %d"), config.cover_position);
+			Debug.AddLog(LOG_LEVEL_INFO, PSTR("Start Auto Stroke: Last %d"), config.cover.position);
 		}
 		return;
 	}
 
 	if (autoStroke && position == 100) // 设置完行程回到原来的位置
 	{
-		config.cover_weak_switch = 127;
-		config.cover_power_switch = 127;
+		config.cover.weak_switch = 127;
+		config.cover.power_switch = 127;
 		autoStroke = false;
 		delay(100);
-		Debug.AddLog(LOG_LEVEL_INFO, PSTR("Stop Auto Stroke: Last %d"), config.cover_position);
+		Debug.AddLog(LOG_LEVEL_INFO, PSTR("Stop Auto Stroke: Last %d"), config.cover.position);
 		uint8_t tmp[10];
-		uint8_t len2 = DOOYACommand::setPosition(tmp, 0xFEFE, 0, config.cover_position);
+		uint8_t len2 = DOOYACommand::setPosition(tmp, 0xFEFE, 0, config.cover.position);
 		softwareSerial->write(tmp, len2);
 		getPositionState = true;
 	}
-	else if (config.cover_position != position)
+	else if (config.cover.position != position)
 	{
-		config.cover_position = position;
+		config.cover.position = position;
 		if (mqtt)
 		{
 			String topic = mqtt->getStatTopic(F("position"));
-			mqtt->publish(topic, String(config.cover_position).c_str());
+			mqtt->publish(topic, String(config.cover.position).c_str());
 		}
 	}
 }
@@ -312,11 +312,11 @@ void Cover::doSoftwareSerialTick(uint8_t *buf, int len)
 			topic = mqtt->getStatTopic(F("motor"));
 			break;
 		case 0x27:
-			config.cover_weak_switch = command.data[0];
+			config.cover.weak_switch = command.data[0];
 			topic = mqtt->getStatTopic(F("weak_switch_type"));
 			break;
 		case 0x28:
-			config.cover_power_switch = command.data[0];
+			config.cover.power_switch = command.data[0];
 			topic = mqtt->getStatTopic(F("power_switch_type"));
 			break;
 		case 0xFE:
@@ -345,8 +345,8 @@ void Cover::doSoftwareSerialTick(uint8_t *buf, int len)
 			// 2 ：手拉使能 0开启 1关闭
 			// 3 : 0电机停止 1开 2关 4电机卡停
 			// 7 : 行程  0未设置行程  1已设置行程
-			config.cover_direction = command.data[1];
-			config.cover_hand_pull = command.data[2];
+			config.cover.direction = command.data[1];
+			config.cover.hand_pull = command.data[2];
 			if (command.data[3] == 0 || command.data[3] == 4) // 0电机停止 1 开 2 关 4 电机卡停
 			{
 				getPositionState = false;
@@ -405,16 +405,16 @@ void Cover::getPositionTask()
 {
 	uint8_t tmp[10];
 	uint8_t len;
-	if (config.cover_weak_switch == 127)
+	if (config.cover.weak_switch == 127)
 	{
-		config.cover_weak_switch = 126;
+		config.cover.weak_switch = 126;
 		len = DOOYACommand::getWeakSwitchType(tmp, 0xFEFE, 0);
 		softwareSerial->write(tmp, len);
 		delay(100);
 	}
-	if (config.cover_power_switch == 127)
+	if (config.cover.power_switch == 127)
 	{
-		config.cover_power_switch = 126;
+		config.cover.power_switch = 126;
 		len = DOOYACommand::getPowerSwitchType(tmp, 0xFEFE, 0);
 		softwareSerial->write(tmp, len);
 		delay(100);
@@ -426,13 +426,13 @@ void Cover::getPositionTask()
 
 Cover::Cover()
 {
-	if (config.cover_weak_switch == 126)
+	if (config.cover.weak_switch == 126)
 	{
-		config.cover_weak_switch = 127;
+		config.cover.weak_switch = 127;
 	}
-	if (config.cover_power_switch == 126)
+	if (config.cover.power_switch == 126)
 	{
-		config.cover_power_switch = 127;
+		config.cover.power_switch = 127;
 	}
 	softwareSerial = new SoftwareSerial(GPIO_PIN[GPIO_RX], GPIO_PIN[GPIO_TX]); // RX, TX
 	softwareSerial->begin(9600);
@@ -495,7 +495,7 @@ void Cover::mqttDiscovery(boolean isEnable)
 		return;
 	}
 	char topic[50];
-	sprintf(topic, "%s/cover/%s/config", config.mqtt_discovery_prefix, UID);
+	sprintf(topic, "%s/cover/%s/config", config.mqtt.discovery_prefix, UID);
 	if (isEnable)
 	{
 		char message[500];
@@ -512,7 +512,7 @@ void Cover::mqttDiscovery(boolean isEnable)
 
 void Cover::mqttConnected()
 {
-	if (config.mqtt_discovery)
+	if (config.mqtt.discovery)
 	{
 		mqttDiscovery(true);
 		mqtt->doReport();
@@ -538,7 +538,7 @@ void Cover::httpAdd(ESP8266WebServer *server)
 String Cover::httpGetStatus(ESP8266WebServer *server)
 {
 	String data = F("\"cover_position\":");
-	data += config.cover_position;
+	data += config.cover.position;
 	return data;
 }
 
@@ -554,7 +554,7 @@ void Cover::httpHtml(ESP8266WebServer *server)
 	page += F("<tr><td>当前位置</td><td><input type='range' min='0' max='100' id='cover_position' name='position' value='{v}' onchange='rangOnChange(this)'/>&nbsp;<span>{v}%</span></td></tr>");
 	page += F("</tbody></table>");
 	page += F("<script type='text/javascript'>function coverSet(t){ajaxPost('/cover_set','do='+t);iscover=1;intervalTime=1000}function rangOnChange(the){the.nextSibling.nextSibling.innerHTML=the.value+'%';ajaxPost('/cover_position', 'position=' + the.value);iscover=1;intervalTime=1000}</script>");
-	page.replace(F("{v}"), String(config.cover_position));
+	page.replace(F("{v}"), String(config.cover.position));
 
 	page += F("<form method='post' action='/cover_setting' onsubmit='postform(this);return false'>");
 	page += F("<table class='gridtable'><thead><tr><th colspan='2'>窗帘设置</th></tr></thead><tbody>");
@@ -563,14 +563,14 @@ void Cover::httpHtml(ESP8266WebServer *server)
 	page += F("<label class='bui-radios-label'><input type='radio' name='direction' value='1'/><i class='bui-radios'></i> 反向</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('direction', '{v}');");
-	radioJs.replace(F("{v}"), String(config.cover_direction));
+	radioJs.replace(F("{v}"), String(config.cover.direction));
 
 	page += F("<tr><td>手拉使能</td><td>");
 	page += F("<label class='bui-radios-label'><input type='radio' name='hand_pull' value='0'/><i class='bui-radios'></i> 开启</label>&nbsp;&nbsp;&nbsp;&nbsp;");
 	page += F("<label class='bui-radios-label'><input type='radio' name='hand_pull' value='1'/><i class='bui-radios'></i> 关闭</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('hand_pull', '{v}');");
-	radioJs.replace(F("{v}"), String(config.cover_hand_pull));
+	radioJs.replace(F("{v}"), String(config.cover.hand_pull));
 
 	page += F("<tr><td>弱点开关</td><td>");
 	page += F("<label class='bui-radios-label'><input type='radio' name='weak_switch' value='1'/><i class='bui-radios'></i> 双反弹开关</label><br/>");
@@ -579,7 +579,7 @@ void Cover::httpHtml(ESP8266WebServer *server)
 	page += F("<label class='bui-radios-label'><input type='radio' name='weak_switch' value='4'/><i class='bui-radios'></i> 单键循环开关</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('weak_switch', '{v}');");
-	radioJs.replace(F("{v}"), String(config.cover_weak_switch));
+	radioJs.replace(F("{v}"), String(config.cover.weak_switch));
 
 	page += F("<tr><td>强电开关</td><td>");
 	page += F("<label class='bui-radios-label'><input type='radio' name='power_switch' value='0'/><i class='bui-radios'></i> 强电双键不反弹模式</label><br/>");
@@ -587,7 +587,7 @@ void Cover::httpHtml(ESP8266WebServer *server)
 	page += F("<label class='bui-radios-label'><input type='radio' name='power_switch' value='2'/><i class='bui-radios'></i> 强电双键可反弹模式</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('power_switch', '{v}');");
-	radioJs.replace(F("{v}"), String(config.cover_power_switch));
+	radioJs.replace(F("{v}"), String(config.cover.power_switch));
 
 	page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>设置</button><br>");
 	page += F("<button type='button' class='btn-danger' style='margin-top: 10px' onclick=\"javascript:if(confirm('确定要电机恢复出厂设置？')){ajaxPost('/cover_reset');}\">电机恢复出厂</button>");

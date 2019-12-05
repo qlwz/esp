@@ -84,7 +84,7 @@ void Http::handleRoot()
 	page.replace(F("{uptime}"), Mqtt::msToHumanString(millis()));
 	page.replace(F("{free_mem}"), String(ESP.getFreeHeap()));
 	page.replace(F("{localIP}"), WiFi.localIP().toString());
-	page.replace(F("{DHCP}"), (!config.dhcp_static ? F("DHCP") : F("静态IP")));
+	page.replace(F("{DHCP}"), (!config.wifi.is_static ? F("DHCP") : F("静态IP")));
 	// TAB 1 End
 
 	server->sendContent(page);
@@ -111,7 +111,7 @@ void Http::handleRoot()
 	page += F("<label class='bui-radios-label'><input type='radio' name='dhcp' value='2' onchange='dhcponchange(this)'/><i class='bui-radios'></i> 静态IP</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('dhcp', '{v}');");
-	radioJs.replace(F("{v}"), config.dhcp_static ? F("2") : F("1"));
+	radioJs.replace(F("{v}"), config.wifi.is_static ? F("2") : F("1"));
 
 	page += F("<tr class='dhcp_hide'><td>静态IP</td><td><input type='text' name='static_ip' placeholder='静态IP' value='{ip}'></td></tr>");
 	page += F("<tr class='dhcp_hide'><td>子网掩码</td><td><input type='text' name='static_netmask' placeholder='子网掩码' value='{sn}'></td></tr>");
@@ -119,9 +119,9 @@ void Http::handleRoot()
 	page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>保存</button></td></tr>");
 	page += F("</tbody></table></form>");
 	page += F("<script type='text/javascript'>function dhcponchange(the){var v=getRadioValue('dhcp');var dom=document.getElementsByClassName('dhcp_hide');for(var i=0;i<dom.length;i++){dom[i].style.display=v==2?'':'none'}}dhcponchange(null);</script>");
-	page.replace(F("{ip}"), config.dhcp_ip);
-	page.replace(F("{sn}"), config.dhcp_sn);
-	page.replace(F("{gw}"), config.dhcp_gw);
+	page.replace(F("{ip}"), config.wifi.ip);
+	page.replace(F("{sn}"), config.wifi.sn);
+	page.replace(F("{gw}"), config.wifi.gw);
 
 	page += F("<form method='post' action='/mqtt' onsubmit='postform(this);return false'>");
 	page += F("<table class='gridtable'><thead><tr><th colspan='2'>MQTT设置</th></tr></thead><tbody>");
@@ -133,11 +133,11 @@ void Http::handleRoot()
 	page += F("<tr><td>状态</td><td id='mqttconnected'>{mqttconnected}</td></tr>");
 	page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>保存</button></td></tr>");
 	page += F("</tbody></table></form>");
-	page.replace(F("{server}"), config.mqtt_server);
-	page.replace(F("{port}"), String(config.mqtt_port));
-	page.replace(F("{user}"), config.mqtt_user);
-	page.replace(F("{pass}"), config.mqtt_pass);
-	page.replace(F("{topic}"), config.mqtt_topic);
+	page.replace(F("{server}"), config.mqtt.server);
+	page.replace(F("{port}"), String(config.mqtt.port));
+	page.replace(F("{user}"), config.mqtt.user);
+	page.replace(F("{pass}"), config.mqtt.pass);
+	page.replace(F("{topic}"), config.mqtt.topic);
 	page.replace(F("{mqttconnected}"), (mqtt && mqtt->mqttClient.connected() ? F("已连接") : F("未连接")));
 
 	page += F("<form method='post' action='/discovery' onsubmit='postform(this);return false'>");
@@ -145,14 +145,14 @@ void Http::handleRoot()
 	page += F("<tr><td>自发现状态</td><td id='discovery'>{discovery}</td></tr>");
 	page += F("<tr><td>自发现前缀</td><td><input type='text' name='discovery_prefix' placeholder='自发现前缀' required value='{prefix}'></td></tr>");
 	page += F("<tr><td colspan='2'><button type='submit' class='btn-info' id='discovery_btn'>打开MQTT自动发现</button></td></tr>");
-	if (config.mqtt_discovery)
+	if (config.mqtt.discovery)
 	{
 		radioJs += F("id('discovery_btn').setAttribute('class', 'btn-danger');id('discovery_btn').innerHTML='关闭MQTT自动发现';");
 	}
 	page += F("</tbody></table></form>");
 	page += F("</div>");
-	page.replace(F("{discovery}"), config.mqtt_discovery ? F("已启动") : F("未启动"));
-	page.replace(F("{prefix}"), config.mqtt_discovery_prefix);
+	page.replace(F("{discovery}"), config.mqtt.discovery ? F("已启动") : F("未启动"));
+	page.replace(F("{prefix}"), config.mqtt.discovery_prefix);
 	// TAB 2 End
 
 	// TAB 3 Start
@@ -189,15 +189,15 @@ void Http::handleRoot()
 	page += F("<label class='bui-radios-label'><input type='checkbox' name='log_syslog' value='1'/><i class='bui-radios' style='border-radius:20%'></i> syslog</label>&nbsp;&nbsp;&nbsp;&nbsp;");
 	page += F("<label class='bui-radios-label'><input type='checkbox' name='log_web' value='1'/><i class='bui-radios' style='border-radius:20%'></i> web</label>");
 	page += F("</td></tr>");
-	if ((1 & config.debug_type) == 1)
+	if ((1 & config.debug.type) == 1)
 	{
 		radioJs += F("setRadioValue('log_serial', '1');");
 	}
-	if ((2 & config.debug_type) == 2)
+	if ((2 & config.debug.type) == 2)
 	{
 		radioJs += F("setRadioValue('log_syslog', '1');");
 	}
-	if ((4 & config.debug_type) == 4)
+	if ((4 & config.debug.type) == 4)
 	{
 		radioJs += F("setRadioValue('log_web', '1');");
 	}
@@ -214,8 +214,8 @@ void Http::handleRoot()
 	page += F("<button type='button' class='btn-danger' style='margin-top: 10px' onclick=\"javascript:if(confirm('确定要重置模块？')){ajaxPost('/reset');}\">重置模块</button>");
 	page += F("</div>");
 
-	page.replace(F("{server}"), config.debug_server);
-	page.replace(F("{port}"), String(config.debug_port));
+	page.replace(F("{server}"), config.debug.server);
+	page.replace(F("{port}"), String(config.debug.port));
 
 	page += F("</div>");
 	// TAB 3 End
@@ -254,7 +254,7 @@ void Http::handleRoot()
 	page += F("</div>");
 	page.replace(F("{v}"), VERSION);
 	page.replace(F("{v1}"), Ntp::GetBuildDateAndTime());
-	page.replace(F("{ota_url}"), config.ota_url);
+	page.replace(F("{ota_url}"), config.http.ota_url);
 	// TAB 4 End
 	server->sendContent(page);
 
@@ -292,11 +292,11 @@ void Http::handleMqtt()
 		Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"MQTT主题必须包含【%prefix%/】\"}"));
 		return;
 	}
-	strcpy(config.mqtt_server, server->arg(F("mqtt_server")).c_str());
-	config.mqtt_port = atoi(server->arg(F("mqtt_port")).c_str());
-	strcpy(config.mqtt_user, server->arg(F("mqtt_username")).c_str());
-	strcpy(config.mqtt_pass, server->arg(F("mqtt_password")).c_str());
-	strcpy(config.mqtt_topic, topic.c_str());
+	strcpy(config.mqtt.server, server->arg(F("mqtt_server")).c_str());
+	config.mqtt.port = atoi(server->arg(F("mqtt_port")).c_str());
+	strcpy(config.mqtt.user, server->arg(F("mqtt_username")).c_str());
+	strcpy(config.mqtt.pass, server->arg(F("mqtt_password")).c_str());
+	strcpy(config.mqtt.topic, topic.c_str());
 	Config::saveConfig();
 	mqtt->setTopic();
 
@@ -359,14 +359,14 @@ void Http::handledhcp()
 		return;
 	}
 
-	boolean old = config.dhcp_static;
-	config.dhcp_static = server->arg(F("dhcp")).equals(F("2"));
-	strcpy(config.dhcp_ip, ip.c_str());
-	strcpy(config.dhcp_sn, netmask.c_str());
-	strcpy(config.dhcp_gw, gateway.c_str());
+	boolean old = config.wifi.is_static;
+	config.wifi.is_static = server->arg(F("dhcp")).equals(F("2"));
+	strcpy(config.wifi.ip, ip.c_str());
+	strcpy(config.wifi.sn, netmask.c_str());
+	strcpy(config.wifi.gw, gateway.c_str());
 	Config::saveConfig();
 
-	if (old != config.dhcp_static)
+	if (old != config.wifi.is_static)
 	{
 		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置DHCP信息成功，重启后生效\"}"));
 	}
@@ -479,8 +479,8 @@ void Http::handleWifi()
 
 	if (WiFi.getMode() == WIFI_STA)
 	{
-		strcpy(config.wifi_ssid, wifi.c_str());
-		strcpy(config.wifi_pass, password.c_str());
+		strcpy(config.wifi.ssid, wifi.c_str());
+		strcpy(config.wifi.pass, password.c_str());
 		Config::saveConfig();
 		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置WiFi信息成功。\"}"));
 	}
@@ -497,15 +497,15 @@ void Http::handleDiscovery()
 	{
 		return;
 	}
-	strcpy(config.mqtt_discovery_prefix, server->arg(F("discovery_prefix")).c_str());
-	config.mqtt_discovery = !config.mqtt_discovery;
+	strcpy(config.mqtt.discovery_prefix, server->arg(F("discovery_prefix")).c_str());
+	config.mqtt.discovery = !config.mqtt.discovery;
 	Config::saveConfig();
 
 	if (module)
 	{
-		module->mqttDiscovery(config.mqtt_discovery);
+		module->mqttDiscovery(config.mqtt.discovery);
 	}
-	if (config.mqtt_discovery)
+	if (config.mqtt.discovery)
 	{
 		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经打开MQTT自发现。\",\"data\":{\"discovery\":1}}"));
 	}
@@ -550,10 +550,10 @@ void Http::handleOTA()
 	{
 		return;
 	}
-	strcpy(config.ota_url, server->arg(F("ota_url")).c_str());
+	strcpy(config.http.ota_url, server->arg(F("ota_url")).c_str());
 	Config::saveConfig();
 	Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"如果成功后设备会重启 . . . \"}"));
-	Wifi::OTA(String(config.ota_url));
+	Wifi::OTA(String(config.http.ota_url));
 }
 
 void Http::handleNotFound()
@@ -601,7 +601,7 @@ void Http::handleGetStatus()
 	data += mqtt && mqtt->mqttClient.connected() ? F("已连接") : F("未连接");
 
 	data += F("\",\"discovery\":");
-	data += config.mqtt_discovery ? 1 : 0;
+	data += config.mqtt.discovery ? 1 : 0;
 
 	data += F(",\"uptime\":\"");
 	data += Mqtt::msToHumanString(millis());
@@ -733,8 +733,8 @@ void Http::begin()
 		module->httpAdd(server);
 	}
 	MDNS.begin(UID);
-	server->begin(config.http_port);
-	Debug.AddLog(LOG_LEVEL_INFO, PSTR("HTTP server started port: %d"), config.http_port);
+	server->begin(config.http.port);
+	Debug.AddLog(LOG_LEVEL_INFO, PSTR("HTTP server started port: %d"), config.http.port);
 }
 
 void Http::stop()
@@ -798,20 +798,18 @@ void Http::handleModuleSetting()
 				Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"syslog服务器不能为空\"}"));
 				return;
 			}
-			strcpy(config.debug_server, log_syslog_host.c_str());
-			config.debug_port = log_syslog_port.toInt();
-			WiFi.hostByName(config.debug_server, Debug.ip);
+			strcpy(config.debug.server, log_syslog_host.c_str());
+			config.debug.port = log_syslog_port.toInt();
+			WiFi.hostByName(config.debug.server, Debug.ip);
 		}
 
-		config.debug_type = t;
+		config.debug.type = t;
 		Config::saveConfig();
 	}
-
-	String type = server->arg(F("module_type"));
-	if (!type.equals(String(config.module_type)))
+	if (Http::server->hasArg(F("module_type")) && !server->arg(F("module_type")).equals(String(config.module_type)))
 	{
 		Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经更换模块类型 . . . 正在重启中。\"}"));
-		config.module_type = (SupportedModules)type.toInt();
+		config.module_type = server->arg(F("module_type")).toInt();
 		Config::saveConfig();
 		Led::blinkLED(400, 4);
 		ESP.restart();
@@ -824,9 +822,9 @@ void Http::handleModuleSetting()
 
 boolean Http::checkAuth()
 {
-	if (config.http_user[0] != 0 && config.http_pass[0] != 0 && server->client().localIP().toString() != "192.168.4.1")
+	if (config.http.user[0] != 0 && config.http.pass[0] != 0 && server->client().localIP().toString() != "192.168.4.1")
 	{
-		if (!server->authenticate(config.http_user, config.http_pass))
+		if (!server->authenticate(config.http.user, config.http.pass))
 		{
 			server->requestAuthentication();
 			return false;

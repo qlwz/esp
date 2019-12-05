@@ -40,7 +40,7 @@ void Zinguo::mqttCallback(String topicStr, String str)
 		mqttTemp = true;
 		controlTemp = str.toFloat();
 		mqtt->publish(mqtt->getStatTopic("temp"), str.c_str());
-		if (controlTemp >= config.zinguo_max_temp)
+		if (controlTemp >= config.zinguo.max_temp)
 		{
 			switchWarm1(false);
 			switchWarm2(false);
@@ -86,9 +86,9 @@ void Zinguo::mqttDiscovery(boolean isEnable)
 
 	String tims[] = {"light", "ventilation", "close", "blow", "warm1", "warm2"};
 
-	for (size_t i = 0; i < (config.zinguo_dual_warm ? 6 : 5); i++)
+	for (size_t i = 0; i < (config.zinguo.dual_warm ? 6 : 5); i++)
 	{
-		sprintf(topic, "%s/%s/%s_%s/config", config.mqtt_discovery_prefix, tims[i] == "light" ? "light" : "switch", UID, tims[i].c_str());
+		sprintf(topic, "%s/%s/%s_%s/config", config.mqtt.discovery_prefix, tims[i] == "light" ? "light" : "switch", UID, tims[i].c_str());
 		if (isEnable)
 		{
 			sprintf(message, HASS_DISCOVER_ZINGUO, UID, tims[i].c_str(),
@@ -104,7 +104,7 @@ void Zinguo::mqttDiscovery(boolean isEnable)
 		}
 	}
 
-	sprintf(topic, "%s/sensor/%s_temp/config", config.mqtt_discovery_prefix, UID);
+	sprintf(topic, "%s/sensor/%s_temp/config", config.mqtt.discovery_prefix, UID);
 	if (isEnable)
 	{
 		sprintf(message, "{\"name\":\"%s_%s\","
@@ -127,7 +127,7 @@ void Zinguo::mqttDiscovery(boolean isEnable)
 
 void Zinguo::mqttConnected()
 {
-	if (config.mqtt_discovery)
+	if (config.mqtt.discovery)
 	{
 		mqttDiscovery(true);
 		mqtt->doReport();
@@ -180,15 +180,15 @@ void Zinguo::perSecondDo()
 
 void Zinguo::httpSetting(ESP8266WebServer *server)
 {
-	config.zinguo_dual_motor = server->arg(F("dual_motor")) == "1" ? true : false;
-	config.zinguo_dual_warm = server->arg(F("dual_warm")) == "1" ? true : false;
-	config.zinguo_linkage = server->arg(F("linkage")).toInt();
-	config.zinguo_delay_blow = server->arg(F("delay_blow")) == "0" ? 127 : server->arg(F("delay_blow")).toInt();
-	config.zinguo_max_temp = server->arg(F("max_temp")).toInt();
-	config.zinguo_close_warm = server->arg(F("close_warm")).toInt();
-	config.zinguo_close_ventilation = server->arg(F("close_ventilation")).toInt();
-	config.zinguo_beep = server->arg(F("beep")) == "1" ? true : false;
-	config.zinguo_reverse_led = server->arg(F("reverse_led")) == "1" ? true : false;
+	config.zinguo.dual_motor = server->arg(F("dual_motor")) == "1" ? true : false;
+	config.zinguo.dual_warm = server->arg(F("dual_warm")) == "1" ? true : false;
+	config.zinguo.linkage = server->arg(F("linkage")).toInt();
+	config.zinguo.delay_blow = server->arg(F("delay_blow")) == "0" ? 127 : server->arg(F("delay_blow")).toInt();
+	config.zinguo.max_temp = server->arg(F("max_temp")).toInt();
+	config.zinguo.close_warm = server->arg(F("close_warm")).toInt();
+	config.zinguo.close_ventilation = server->arg(F("close_ventilation")).toInt();
+	config.zinguo.beep = server->arg(F("beep")) == "1" ? true : false;
+	config.zinguo.reverse_led = server->arg(F("reverse_led")) == "1" ? true : false;
 
 	server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经设置。\"}"));
 }
@@ -262,14 +262,14 @@ void Zinguo::httpHtml(ESP8266WebServer *server)
 	page += F("<label class='bui-radios-label'><input type='radio' name='dual_motor' value='1'/><i class='bui-radios'></i> 双电机</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('dual_motor', '{v}');");
-	radioJs.replace(F("{v}"), config.zinguo_dual_motor ? "1" : "0");
+	radioJs.replace(F("{v}"), config.zinguo.dual_motor ? "1" : "0");
 
 	page += F("<tr><td>风暖数量</td><td>");
 	page += F("<label class='bui-radios-label'><input type='radio' name='dual_warm' value='0'/><i class='bui-radios'></i> 单风暖</label>&nbsp;&nbsp;&nbsp;&nbsp;");
 	page += F("<label class='bui-radios-label'><input type='radio' name='dual_warm' value='1'/><i class='bui-radios'></i> 双风暖</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('dual_warm', '{v}');");
-	radioJs.replace(F("{v}"), config.zinguo_dual_warm ? "1" : "0");
+	radioJs.replace(F("{v}"), config.zinguo.dual_warm ? "1" : "0");
 
 	page += F("<tr><td>吹风联动</td><td>");
 	page += F("<label class='bui-radios-label'><input type='radio' name='linkage' value='0'/><i class='bui-radios'></i> 不联动</label><br/>");
@@ -278,33 +278,33 @@ void Zinguo::httpHtml(ESP8266WebServer *server)
 	page += F("<label class='bui-radios-label'><input type='radio' name='linkage' value='3'/><i class='bui-radios'></i> 暖2联动</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('linkage', '{v}');");
-	radioJs.replace(F("{v}"), String(config.zinguo_linkage));
+	radioJs.replace(F("{v}"), String(config.zinguo.linkage));
 
 	page += F("<tr><td>吹风延时</td><td><input type='number' min='0' max='90' name='delay_blow' required value='{delay_blow}'>秒</td></tr>");
-	page.replace(F("{delay_blow}"), config.zinguo_delay_blow == 127 ? "0" : String(config.zinguo_delay_blow));
+	page.replace(F("{delay_blow}"), config.zinguo.delay_blow == 127 ? "0" : String(config.zinguo.delay_blow));
 
 	page += F("<tr><td>过温保护</td><td><input type='number' min='15' max='45' name='max_temp' required value='{max_temp}'>&nbsp;度</td></tr>");
-	page.replace(F("{max_temp}"), String(config.zinguo_max_temp));
+	page.replace(F("{max_temp}"), String(config.zinguo.max_temp));
 
 	page += F("<tr><td>取暖定时关闭</td><td><input type='number' min='1' max='90' name='close_warm' required value='{close_warm}'>&nbsp;分钟</td></tr>");
-	page.replace(F("{close_warm}"), String(config.zinguo_close_warm));
+	page.replace(F("{close_warm}"), String(config.zinguo.close_warm));
 
 	page += F("<tr><td>换气定时关闭</td><td><input type='number' min='1' max='90' name='close_ventilation' required value='{close_ventilation}'>&nbsp;分钟</td></tr>");
-	page.replace(F("{close_ventilation}"), String(config.zinguo_close_ventilation));
+	page.replace(F("{close_ventilation}"), String(config.zinguo.close_ventilation));
 
 	page += F("<tr><td>按键声音</td><td>");
 	page += F("<label class='bui-radios-label'><input type='radio' name='beep' value='0'/><i class='bui-radios'></i> 关闭</label>&nbsp;&nbsp;&nbsp;&nbsp;");
 	page += F("<label class='bui-radios-label'><input type='radio' name='beep' value='1'/><i class='bui-radios'></i> 开启</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('beep', '{v}');");
-	radioJs.replace(F("{v}"), config.zinguo_beep ? "1" : "0");
+	radioJs.replace(F("{v}"), config.zinguo.beep ? "1" : "0");
 
 	page += F("<tr><td>LED颜色</td><td>");
 	page += F("<label class='bui-radios-label'><input type='radio' name='reverse_led' value='0'/><i class='bui-radios'></i> 待机蓝色</label>&nbsp;&nbsp;&nbsp;&nbsp;");
 	page += F("<label class='bui-radios-label'><input type='radio' name='reverse_led' value='1'/><i class='bui-radios'></i> 待机红色</label>");
 	page += F("</td></tr>");
 	radioJs += F("setRadioValue('reverse_led', '{v}');");
-	radioJs.replace(F("{v}"), config.zinguo_reverse_led ? "1" : "0");
+	radioJs.replace(F("{v}"), config.zinguo.reverse_led ? "1" : "0");
 
 	page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>设置</button></td></tr>");
 	page += F("</tbody></table></form>");
@@ -379,7 +379,7 @@ void Zinguo::dispCtrl() //显示、控制数据的输出
 	delayMicroseconds(1);
 	digitalWrite(PIN_LOAD, LOW);
 
-	if (config.zinguo_reverse_led)
+	if (config.zinguo.reverse_led)
 	{
 		//红色LED，待机状态
 		The1st595 = B00000000 | controlPin;  //8Bit：控制红灯(1关/0开),7~3Bit:继电器可控硅，2~1Bit：数码管位
@@ -397,7 +397,7 @@ void Zinguo::dispCtrl() //显示、控制数据的输出
 	delayMicroseconds(1);
 	digitalWrite(PIN_LOAD, LOW);
 
-	if (config.zinguo_reverse_led)
+	if (config.zinguo.reverse_led)
 	{
 		//蓝色LED，激活状态
 		The1st595 = B10000000 | controlPin; //8Bit：控制红灯(1关/0开),7~3Bit:继电器可控硅，2~1Bit：数码管位
@@ -512,7 +512,7 @@ void Zinguo::convertTemp(void)
 		controlTemp = temp; //输出温度值
 		mqtt->publish(mqtt->getStatTopic("temp"), String(temp).c_str());
 
-		if (controlTemp >= config.zinguo_max_temp)
+		if (controlTemp >= config.zinguo.max_temp)
 		{
 			switchWarm1(false);
 			switchWarm2(false);
@@ -540,7 +540,7 @@ void Zinguo::switchLight(boolean isOn, bool isBeep)
 		controlOut &= ~(1 << 0);
 	}
 
-	if (isBeep && config.zinguo_beep)
+	if (isBeep && config.zinguo.beep)
 	{
 		beepBeep(1);
 	}
@@ -556,15 +556,15 @@ void Zinguo::switchVentilation(boolean isOn, bool isBeep)
 	}
 	if (isOn)
 	{
-		if (!config.zinguo_dual_motor) // 单电机
+		if (!config.zinguo.dual_motor) // 单电机
 		{
-			if ((config.zinguo_linkage == 1 && (bitRead(controlOut, KEY_WARM_1 - 1) || bitRead(controlOut, KEY_WARM_2 - 1))) // 暖1暖2联动  开启时不能开启换气
-				|| (config.zinguo_linkage == 2 && bitRead(controlOut, KEY_WARM_1 - 1))										 // 暖1联动 开启时不能开启换气
-				|| (config.zinguo_linkage == 3 && bitRead(controlOut, KEY_WARM_2 - 1))										 // 暖2联动 开启时不能开启换气
+			if ((config.zinguo.linkage == 1 && (bitRead(controlOut, KEY_WARM_1 - 1) || bitRead(controlOut, KEY_WARM_2 - 1))) // 暖1暖2联动  开启时不能开启换气
+				|| (config.zinguo.linkage == 2 && bitRead(controlOut, KEY_WARM_1 - 1))										 // 暖1联动 开启时不能开启换气
+				|| (config.zinguo.linkage == 3 && bitRead(controlOut, KEY_WARM_2 - 1))										 // 暖2联动 开启时不能开启换气
 				|| closeBlowTime != 127																						 // 延时关闭吹风
 			)
 			{
-				if (isBeep && config.zinguo_beep)
+				if (isBeep && config.zinguo.beep)
 				{
 					beepBeep(2);
 				}
@@ -576,9 +576,9 @@ void Zinguo::switchVentilation(boolean isOn, bool isBeep)
 		controlPin &= ~(1 << 4);
 		controlLED |= (1 << 1);
 		controlOut |= (1 << 1);
-		if (config.zinguo_close_ventilation > 0)
+		if (config.zinguo.close_ventilation > 0)
 		{
-			ventilationTime = perSecond + (config.zinguo_close_ventilation * 60); // 通过每秒定时器处理
+			ventilationTime = perSecond + (config.zinguo.close_ventilation * 60); // 通过每秒定时器处理
 		}
 	}
 	else
@@ -589,7 +589,7 @@ void Zinguo::switchVentilation(boolean isOn, bool isBeep)
 		ventilationTime = 0;
 	}
 
-	if (isBeep && config.zinguo_beep)
+	if (isBeep && config.zinguo.beep)
 	{
 		beepBeep(1);
 	}
@@ -605,7 +605,7 @@ void Zinguo::switchWarm1(boolean isOn, bool isBeep)
 	}
 	if (isOn)
 	{
-		if (config.zinguo_linkage == 1 || config.zinguo_linkage == 2) // 暖1联动
+		if (config.zinguo.linkage == 1 || config.zinguo.linkage == 2) // 暖1联动
 		{
 			switchBlow(true, false);
 		}
@@ -613,9 +613,9 @@ void Zinguo::switchWarm1(boolean isOn, bool isBeep)
 		controlLED |= (1 << 3);
 		controlOut |= (1 << 7);
 		closeBlowTime = 127;
-		if (warmTime == 0 && config.zinguo_close_warm > 0)
+		if (warmTime == 0 && config.zinguo.close_warm > 0)
 		{
-			warmTime = perSecond + (config.zinguo_close_warm * 60); // 通过每秒定时器处理
+			warmTime = perSecond + (config.zinguo.close_warm * 60); // 通过每秒定时器处理
 		}
 	}
 	else
@@ -623,9 +623,9 @@ void Zinguo::switchWarm1(boolean isOn, bool isBeep)
 		controlPin &= ~(1 << 5);
 		controlLED &= ~(1 << 3);
 		controlOut &= ~(1 << 7);
-		if ((config.zinguo_linkage == 1 && !bitRead(controlOut, KEY_WARM_2 - 1)) || config.zinguo_linkage == 2)
+		if ((config.zinguo.linkage == 1 && !bitRead(controlOut, KEY_WARM_2 - 1)) || config.zinguo.linkage == 2)
 		{
-			closeBlowTime = config.zinguo_delay_blow;
+			closeBlowTime = config.zinguo.delay_blow;
 		}
 		if (!bitRead(controlOut, KEY_WARM_2 - 1))
 		{
@@ -633,7 +633,7 @@ void Zinguo::switchWarm1(boolean isOn, bool isBeep)
 		}
 	}
 
-	if (isBeep && config.zinguo_beep)
+	if (isBeep && config.zinguo.beep)
 	{
 		beepBeep(1);
 	}
@@ -649,7 +649,7 @@ void Zinguo::switchWarm2(boolean isOn, bool isBeep)
 	}
 	if (isOn)
 	{
-		if (config.zinguo_linkage == 1 || config.zinguo_linkage == 3) // 暖2联动
+		if (config.zinguo.linkage == 1 || config.zinguo.linkage == 3) // 暖2联动
 		{
 			switchBlow(true, false);
 		}
@@ -657,9 +657,9 @@ void Zinguo::switchWarm2(boolean isOn, bool isBeep)
 		controlLED |= (1 << 5);
 		controlOut |= (1 << 5);
 		closeBlowTime = 127;
-		if (warmTime == 0 && config.zinguo_close_warm > 0)
+		if (warmTime == 0 && config.zinguo.close_warm > 0)
 		{
-			warmTime = perSecond + (config.zinguo_close_warm * 60); // 通过每秒定时器处理
+			warmTime = perSecond + (config.zinguo.close_warm * 60); // 通过每秒定时器处理
 		}
 	}
 	else
@@ -667,9 +667,9 @@ void Zinguo::switchWarm2(boolean isOn, bool isBeep)
 		controlPin &= ~(1 << 6);
 		controlLED &= ~(1 << 5);
 		controlOut &= ~(1 << 5);
-		if ((config.zinguo_linkage == 1 && !bitRead(controlOut, KEY_WARM_1 - 1)) || config.zinguo_linkage == 3)
+		if ((config.zinguo.linkage == 1 && !bitRead(controlOut, KEY_WARM_1 - 1)) || config.zinguo.linkage == 3)
 		{
-			closeBlowTime = config.zinguo_delay_blow;
+			closeBlowTime = config.zinguo.delay_blow;
 		}
 		if (!bitRead(controlOut, KEY_WARM_1 - 1))
 		{
@@ -677,13 +677,13 @@ void Zinguo::switchWarm2(boolean isOn, bool isBeep)
 		}
 	}
 
-	if (isBeep && config.zinguo_beep)
+	if (isBeep && config.zinguo.beep)
 	{
 		beepBeep(1);
 	}
 
 	// 单风暖的时候 控制风暖1
-	if (!config.zinguo_dual_warm)
+	if (!config.zinguo.dual_warm)
 	{
 		switchWarm1(isOn, false);
 		return;
@@ -701,7 +701,7 @@ void Zinguo::switchBlowReal(boolean isOn, bool isBeep)
 	}
 	if (isOn)
 	{
-		if (!config.zinguo_dual_motor) // 单电机
+		if (!config.zinguo.dual_motor) // 单电机
 		{
 			switchVentilation(false, false);
 		}
@@ -716,7 +716,7 @@ void Zinguo::switchBlowReal(boolean isOn, bool isBeep)
 		controlOut &= ~(1 << 6);
 	}
 
-	if (isBeep && config.zinguo_beep)
+	if (isBeep && config.zinguo.beep)
 	{
 		beepBeep(1);
 	}
@@ -735,19 +735,19 @@ void Zinguo::switchBlow(boolean isOn, bool isBeep)
 		{
 			return;
 		}
-		if (config.zinguo_linkage == 1 || config.zinguo_linkage == 2)
+		if (config.zinguo.linkage == 1 || config.zinguo.linkage == 2)
 		{
 			switchWarm1(false, false);
 		}
-		if ((config.zinguo_linkage == 1 || config.zinguo_linkage == 3))
+		if ((config.zinguo.linkage == 1 || config.zinguo.linkage == 3))
 		{
 			switchWarm2(false, false);
 		}
-		if (config.zinguo_linkage == 0 || closeBlowTime == 127)
+		if (config.zinguo.linkage == 0 || closeBlowTime == 127)
 		{
 			switchBlowReal(isOn, false);
 		}
-		if (isBeep && config.zinguo_beep)
+		if (isBeep && config.zinguo.beep)
 		{
 			beepBeep(1);
 		}
@@ -765,7 +765,7 @@ void Zinguo::switchCloseAll(boolean isOn, bool isBeep)
 	switchBlow(false, false);
 	switchWarm1(false, false);
 	switchWarm2(false, false);
-	if (config.zinguo_beep)
+	if (config.zinguo.beep)
 	{
 		beepBeep(1);
 	}

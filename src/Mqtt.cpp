@@ -14,6 +14,7 @@ bool Mqtt::mqttConnect()
     }
     if (globalConfig.mqtt.port == 0)
     {
+        Debug.AddLog(LOG_LEVEL_INFO, PSTR("no set mqtt info"));
         return false;
     }
     if (mqttClient.connected())
@@ -53,11 +54,7 @@ void Mqtt::doReport()
 
 void Mqtt::perSecondDo()
 {
-    if (perSecond % 60 != 0)
-    {
-        return;
-    }
-    if (mqttClient.connected())
+    if (perSecond % 60 == 0 && mqttClient.connected())
     {
         doReport();
     }
@@ -65,19 +62,13 @@ void Mqtt::perSecondDo()
 
 void Mqtt::loop()
 {
+    if (WiFi.status() != WL_CONNECTED || globalConfig.mqtt.port == 0)
+    {
+        return;
+    }
     uint32_t now = millis();
     if (!mqttClient.connected())
     {
-        if (WiFi.status() != WL_CONNECTED)
-        {
-            return;
-        }
-        if (wasConnected)
-        {
-            lastDisconnectedTime = now;
-            wasConnected = false;
-            mqttDisconnectCounter++;
-        }
         if (now - lastReconnectAttempt > kMqttReconnectTime || lastReconnectAttempt == 0)
         {
             lastReconnectAttempt = now;
@@ -85,17 +76,6 @@ void Mqtt::loop()
             if (mqttConnect())
             {
                 lastReconnectAttempt = 0;
-                wasConnected = true;
-                if (mqttIsFirst)
-                {
-                    Debug.AddLog(LOG_LEVEL_INFO, PSTR("MQTT just booted"));
-                    mqttIsFirst = false;
-                }
-                else
-                {
-                    Debug.AddLog(LOG_LEVEL_INFO, PSTR("MQTT just (re)connected to MQTT. Lost connection about %s"), Ntp::timeSince(lastConnectedTime).c_str());
-                }
-                lastConnectedTime = now;
                 Debug.AddLog(LOG_LEVEL_INFO, PSTR("successful client mqtt connection"));
                 doReport();
             }
@@ -103,7 +83,6 @@ void Mqtt::loop()
     }
     else
     {
-        lastConnectedTime = now;
         mqttClient.loop();
     }
 }

@@ -21,13 +21,8 @@ public:
     PubSubClient mqttClient;
     void (*_connectedCallback)(void) = NULL;
 
-    bool wasConnected = true;
-    uint32_t lastDisconnectedTime = 0;         // 最后重连时间
-    uint32_t lastConnectedTime = 0;            // 最后在线时间
-    uint32_t mqttDisconnectCounter = 0;        // 重连次数
     uint32_t lastReconnectAttempt = 0;         // 最后尝试重连时间
     const uint32_t kMqttReconnectTime = 30000; // 重新连接尝试之间的延迟（ms）
-    bool mqttIsFirst = true;
 
     bool mqttConnect();
     void doReport();

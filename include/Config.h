@@ -35,12 +35,12 @@
 
 enum LoggingLevels
 {
-	LOG_LEVEL_NONE,
-	LOG_LEVEL_ERROR,
-	LOG_LEVEL_INFO,
-	LOG_LEVEL_DEBUG,
-	LOG_LEVEL_DEBUG_MORE,
-	LOG_LEVEL_ALL
+    LOG_LEVEL_NONE,
+    LOG_LEVEL_ERROR,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_DEBUG_MORE,
+    LOG_LEVEL_ALL
 };
 
 extern Module *module;
@@ -55,20 +55,20 @@ extern Ticker *tickerPerSecond;
 class Config
 {
 private:
-	static uint16_t nowCrc;
+    static uint16_t nowCrc;
 
 public:
-	static uint16_t crc16(uint8_t *ptr, uint16_t len);
-	static void loadModule(uint8_t module);
+    static uint16_t crc16(uint8_t *ptr, uint16_t len);
+    static void loadModule(uint8_t module);
 
-	static boolean resetConfig();
+    static boolean resetConfig();
 
-	static boolean readConfig(boolean isErrorReset = true);
-	static boolean saveConfig();
+    static boolean readConfig(boolean isErrorReset = true);
+    static boolean saveConfig();
 
-	static boolean readConfigSPIFFS(boolean isErrorReset = true);
-	static boolean saveConfigSPIFFS();
-	static void perSecondDo();
+    static boolean readConfigSPIFFS(boolean isErrorReset = true);
+    static boolean saveConfigSPIFFS();
+    static void perSecondDo();
 };
 
 #endif

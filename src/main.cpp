@@ -3,19 +3,24 @@
 #include "Ntp.h"
 #include "Debug.h"
 #include "Led.h"
-#include "Relay.h"
-#ifdef USE_COVER
-#include "Cover.h"
-#endif
 #include "Http.h"
-#include "template.h"
 #include "Wifi.h"
 #include "Mqtt.h"
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
-#include "config.pb.h"
+
+#ifdef USE_RELAY
+#include "Relay.h"
+#elif defined USE_COVER
+#include "Cover.h"
+#elif defined USE_ZINGUO
 #include "Zinguo.h"
+#elif defined USE_WEILE
+#include "Weile.h"
+#else
+#error "not support module"
+#endif
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -68,45 +73,37 @@ void setup()
 {
     sprintf(UID, HOST_PREFIX, ESP.getChipId());
     Serial.begin(115200);
-    EEPROM.begin(ConfigMessage_size + 6);
-    config.debug.type = 1;
-    Config::readConfig();
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("---------------------  v%s  %s  -------------------"), VERSION, Ntp::GetBuildDateAndTime().c_str());
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("UID: %s"), UID);
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("Config Len: %d"), ConfigMessage_size + 6);
-    //Config::resetConfig();
-    if (MQTT_MAX_PACKET_SIZE == 128)
-    {
-        Debug.AddLog(LOG_LEVEL_INFO, PSTR("WRONG PUBSUBCLIENT LIBRARY USED PLEASE INSTALL THE ONE FROM OMG LIB FOLDER"));
-    }
+    EEPROM.begin(GlobalConfigMessage_size + 6);
+    globalConfig.debug.type = 1;
 
-    Config::loadModule(config.module_type);
-
-    mqtt = new Mqtt();
 #ifdef USE_RELAY
     module = new Relay();
 #elif defined USE_COVER
     module = new Cover();
 #elif defined USE_ZINGUO
     module = new Zinguo();
-#else
-#error "No CLASS"
+#elif defined USE_WEILE
+    module = new Weile();
 #endif
 
-    if (GPIO_PIN[GPIO_LED_POWER] != 99)
+    Config::readConfig();
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("---------------------  v%s  %s  -------------------"), VERSION, Ntp::GetBuildDateAndTime().c_str());
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("UID: %s"), UID);
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("Config Len: %d"), GlobalConfigMessage_size + 6);
+    //Config::resetConfig();
+    if (MQTT_MAX_PACKET_SIZE == 128)
     {
-        Led::init(GPIO_PIN[GPIO_LED_POWER], HIGH);
-    }
-    else if (GPIO_PIN[GPIO_LED_POWER_INV] != 99)
-    {
-        Led::init(GPIO_PIN[GPIO_LED_POWER_INV], LOW);
+        Debug.AddLog(LOG_LEVEL_INFO, PSTR("WRONG PUBSUBCLIENT LIBRARY USED PLEASE INSTALL THE ONE FROM OMG LIB FOLDER"));
     }
 
+    mqtt = new Mqtt();
     tickerPerSecond = new Ticker();
     tickerPerSecond->attach(1, tickerPerSecondDo);
     Http::begin();
     Wifi::connectWifi();
     Ntp::init();
+
+    module->init();
 
     mqtt->setClient(Wifi::wifiClient);
     mqtt->mqttSetConnectedCallback(connectedCallback);

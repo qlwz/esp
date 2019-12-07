@@ -9,18 +9,24 @@
 class Module
 {
 public:
-    virtual String moduleName();
+    char moduleName[10];
+    char moduleCNName[15];
+    virtual void init();
     virtual bool moduleLed();
 
     virtual void loop();
     virtual void perSecondDo();
 
-    virtual void httpAdd(ESP8266WebServer *server);
-    virtual String httpGetStatus(ESP8266WebServer *server);
-    virtual void httpHtml(ESP8266WebServer *server);
+    virtual void readConfig();
+    virtual void resetConfig();
+    virtual void saveConfig();
 
-    virtual void mqttDiscovery(boolean isEnable = true);
+    virtual void httpAdd(ESP8266WebServer *server);
+    virtual void httpHtml(ESP8266WebServer *server);
+    virtual String httpGetStatus(ESP8266WebServer *server);
+
     virtual void mqttCallback(String topicStr, String str);
     virtual void mqttConnected();
+    virtual void mqttDiscovery(boolean isEnable = true);
 };
 #endif

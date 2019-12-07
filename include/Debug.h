@@ -7,6 +7,16 @@
 #include <ESP8266WiFi.h>
 #include "Config.h"
 
+enum LoggingLevels
+{
+    LOG_LEVEL_NONE,
+    LOG_LEVEL_ERROR,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_DEBUG_MORE,
+    LOG_LEVEL_ALL
+};
+
 class DebugClass // : public Print
 {
 protected:

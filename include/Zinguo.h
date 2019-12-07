@@ -6,8 +6,11 @@
 
 #include "arduino.h"
 #include <ESP8266WebServer.h>
-#include "Module.h"
 #include <Ticker.h>
+#include "Module.h"
+#include "ZinguoConfig.pb.h"
+
+#define MODULE_CFG_VERSION 2001 //2001 - 2500
 
 #define twi_sda 4                                //SDA引脚IO定义,for sc09a
 #define twi_scl 5                                //SCL引脚IO定义,for sc09a
@@ -44,6 +47,7 @@ const char HASS_DISCOVER_ZINGUO[] PROGMEM =
 class Zinguo : public Module
 {
 private:
+    ZinguoConfigMessage config;
     //数码管0~9,Fix For New
     const unsigned char DigitNUM[10] = {0x81, 0x9F, 0xA2, 0x92, 0x9C, 0xD0, 0xC0, 0x9B, 0x80, 0x90};
 
@@ -87,23 +91,27 @@ private:
     // 全关 Key3
     void switchCloseAll(boolean isOn, bool isBeep = true);
 
-    void httpSetting(ESP8266WebServer *server);
     void httpDo(ESP8266WebServer *server);
+    void httpSetting(ESP8266WebServer *server);
 
 public:
-    Zinguo();
-    String moduleName();
-    void mqttCallback(String topicStr, String str);
+    void init();
+    bool moduleLed();
+
     void loop();
-    void mqttConnected();
     void perSecondDo();
+
+    void readConfig();
+    void resetConfig();
+    void saveConfig();
+
+    void mqttCallback(String topicStr, String str);
+    void mqttConnected();
     void mqttDiscovery(boolean isEnable = true);
 
     void httpAdd(ESP8266WebServer *server);
-    String httpGetStatus(ESP8266WebServer *server);
     void httpHtml(ESP8266WebServer *server);
-
-    bool moduleLed();
+    String httpGetStatus(ESP8266WebServer *server);
 };
 #endif
 

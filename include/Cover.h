@@ -7,7 +7,10 @@
 #include "arduino.h"
 #include <softwareSerial.h>
 #include <ESP8266WebServer.h>
+#include "CoverConfig.pb.h"
 #include "Module.h"
+
+#define MODULE_CFG_VERSION 1501 //1501 - 2000
 
 const char HASS_DISCOVER_COVER[] PROGMEM =
     "{\"name\":\"%s\","
@@ -29,13 +32,7 @@ const char HASS_DISCOVER_COVER[] PROGMEM =
 class Cover : public Module
 {
 private:
-    uint8_t getInt(String str, uint8_t min, uint8_t max);
-    void handleCoverPosition(ESP8266WebServer *server);
-    void handleCoverSet(ESP8266WebServer *server);
-    void handleCoverSetting(ESP8266WebServer *server);
-    void handleCoverReset(ESP8266WebServer *server);
-    void doPosition(uint8_t position, uint8_t command);
-    void doSoftwareSerialTick(uint8_t *buf, int len);
+    CoverConfigMessage config;
 
     boolean getPositionState = false;
     SoftwareSerial *softwareSerial;       // RX, TX
@@ -51,23 +48,36 @@ private:
     unsigned long buttonTimingStart = 0;
     int buttonAction = 0; // 0 = 没有要执行的动作, 1 = 执行短按动作, 2 = 执行长按动作
 
-public:
-    Cover();
-    String moduleName();
-    void mqttCallback(String topicStr, String str);
+    uint8_t getInt(String str, uint8_t min, uint8_t max);
+    void httpPosition(ESP8266WebServer *server);
+    void httpDo(ESP8266WebServer *server);
+    void httpSetting(ESP8266WebServer *server);
+    void httpReset(ESP8266WebServer *server);
+    void doPosition(uint8_t position, uint8_t command);
+    void doSoftwareSerialTick(uint8_t *buf, int len);
+
     void readSoftwareSerialTick();
     void getPositionTask();
     void checkButton();
+
+public:
+    void init();
+    bool moduleLed();
+
     void loop();
-    void mqttConnected();
     void perSecondDo();
+
+    void readConfig();
+    void resetConfig();
+    void saveConfig();
+
+    void mqttCallback(String topicStr, String str);
+    void mqttConnected();
     void mqttDiscovery(boolean isEnable = true);
 
     void httpAdd(ESP8266WebServer *server);
-    String httpGetStatus(ESP8266WebServer *server);
     void httpHtml(ESP8266WebServer *server);
-
-    bool moduleLed();
+    String httpGetStatus(ESP8266WebServer *server);
 };
 #endif
 

@@ -1,21 +1,15 @@
 
 #include "Config.h"
 #include "Debug.h"
-#include "template.h"
 #include <EEPROM.h>
-#include <FS.h>
 #include <Ticker.h>
-#include <pb_encode.h>
-#include <pb_decode.h>
-#include "config.pb.h"
 
 Module *module;
 char UID[16];
 char tmpData[512] = {0};
-uint8_t GPIO_PIN[MAX_GPIO_PIN - MIN_FLASH_PINS];
 uint32_t perSecond;
 Ticker *tickerPerSecond;
-ConfigMessage config;
+GlobalConfigMessage globalConfig;
 
 uint16_t Config::nowCrc;
 
@@ -38,171 +32,119 @@ uint16_t Config::crc16(uint8_t *ptr, uint16_t len)
     return crc;
 }
 
-void Config::loadModule(uint8_t module)
-{
-    for (uint16_t i = 0; i < sizeof(GPIO_PIN); i++)
-    {
-        GPIO_PIN[i] = 99;
-    }
-
-    mytmplt m = Modules[module];
-    uint8_t j = 0;
-    for (uint8_t i = 0; i < sizeof(m.io); i++)
-    {
-        if (6 == i)
-        {
-            j = 9;
-        }
-        if (8 == i)
-        {
-            j = 12;
-        }
-        GPIO_PIN[m.io[i]] = j;
-        j++;
-    }
-}
-
-boolean Config::resetConfig()
+void Config::resetConfig()
 {
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("resetConfig . . . OK"));
-    memset(&config, 0, sizeof(ConfigMessage));
+    memset(&globalConfig, 0, sizeof(GlobalConfigMessage));
 
 #ifdef WIFI_SSID
-    strcpy(config.wifi_ssid, WIFI_SSID);
+    strcpy(globalConfig.wifi_ssid, WIFI_SSID);
 #endif
 #ifdef WIFI_PASS
-    strcpy(config.wifi_pass, WIFI_PASS);
+    strcpy(globalConfig.wifi_pass, WIFI_PASS);
 
 #endif
 #ifdef MQTT_SERVER
-    strcpy(config.mqtt_server, MQTT_SERVER);
+    strcpy(globalConfig.mqtt_server, MQTT_SERVER);
 #endif
 #ifdef MQTT_PORT
-    config.mqtt_port = MQTT_PORT;
+    globalConfig.mqtt_port = MQTT_PORT;
 #endif
 #ifdef MQTT_USER
-    strcpy(config.mqtt_user, MQTT_USER);
+    strcpy(globalConfig.mqtt_user, MQTT_USER);
 #endif
 #ifdef MQTT_PASS
-    strcpy(config.mqtt_pass, MQTT_PASS);
+    strcpy(globalConfig.mqtt_pass, MQTT_PASS);
 #endif
-    config.mqtt.discovery = false;
-    strcpy(config.mqtt.discovery_prefix, "homeassistant");
+    globalConfig.mqtt.discovery = false;
+    strcpy(globalConfig.mqtt.discovery_prefix, "homeassistant");
 
 #ifdef MQTT_FULLTOPIC
-    strcpy(config.mqtt.topic, MQTT_FULLTOPIC);
+    strcpy(globalConfig.mqtt.topic, MQTT_FULLTOPIC);
 #endif
 #ifdef OTA_URL
-    strcpy(config.http.ota_url, OTA_URL);
+    strcpy(globalConfig.http.ota_url, OTA_URL);
 #endif
-    config.http.port = 80;
+    globalConfig.http.port = 80;
+    globalConfig.debug.type = 1;
 
-#ifdef USE_RELAY
-    config.module_type = SupportedModules::CH3;
-
-    config.relay.led_light = 50;
-    config.relay.led_time = 3;
-#elif defined USE_COVER
-    config.module_type = SupportedModules::HUEX_COVER;
-
-    config.cover.position = 127;
-    config.cover.direction = 127;
-    config.cover.hand_pull = 127;
-    config.cover.weak_switch = 127;
-    config.cover.power_switch = 127;
-
-#elif defined USE_ZINGUO
-    config.module_type = SupportedModules::ZINGUO;
-
-    config.zinguo.dual_motor = true;
-    config.zinguo.dual_warm = true;
-    config.zinguo.delay_blow = 30;
-    config.zinguo.linkage = 1;
-    config.zinguo.max_temp = 40;
-    config.zinguo.close_warm = 30;
-    config.zinguo.close_ventilation = 30;
-    config.zinguo.beep = true;
-#else
-#error "not support module"
-#endif
-
-    config.debug.type = 1;
-    return true;
+    module->resetConfig();
 }
 
-boolean Config::readConfig(boolean isErrorReset)
+void Config::readConfig()
 {
     uint16 len;
     boolean status = false;
     uint16 cfg = (EEPROM.read(0) << 8 | EEPROM.read(1));
-    if (cfg == CFG_HOLDER)
+    if (cfg == GLOBAL_CFG_VERSION)
     {
         len = (EEPROM.read(2) << 8 | EEPROM.read(3));
         nowCrc = (EEPROM.read(4) << 8 | EEPROM.read(5));
 
-        if (len > ConfigMessage_size)
+        if (len > GlobalConfigMessage_size)
         {
-            len = ConfigMessage_size;
+            len = GlobalConfigMessage_size;
         }
 
         uint16_t crc = 0xffff;
-        uint8_t buffer[ConfigMessage_size];
+        uint8_t buffer[GlobalConfigMessage_size];
         for (uint16_t i = 0; i < len; ++i)
         {
             buffer[i] = EEPROM.read(i + 6);
-
             crc = crcTalbe[(buffer[i] ^ crc) & 15] ^ (crc >> 4);
             crc = crcTalbe[((buffer[i] >> 4) ^ crc) & 15] ^ (crc >> 4);
         }
         if (crc == nowCrc)
         {
-            memset(&config, 0, sizeof(ConfigMessage));
+            memset(&globalConfig, 0, sizeof(GlobalConfigMessage));
             pb_istream_t stream = pb_istream_from_buffer(buffer, len);
-            status = pb_decode(&stream, ConfigMessage_fields, &config);
-            if (config.http.port == 0)
+            status = pb_decode(&stream, GlobalConfigMessage_fields, &globalConfig);
+            if (globalConfig.http.port == 0)
             {
-                config.http.port = 80;
+                globalConfig.http.port = 80;
             }
         }
     }
 
     if (!status)
     {
-        config.debug.type = 1;
+        globalConfig.debug.type = 1;
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("readConfig . . . Error"));
-        if (isErrorReset)
-        {
-            resetConfig();
-            return true;
-        }
-        memset(&config, 0, sizeof(ConfigMessage));
-        return false;
+        resetConfig();
     }
-
-    if (config.module_type >= SupportedModules::END)
-    {
-        config.module_type = 0;
-    }
+    module->readConfig();
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("readConfig . . . OK Len: %d"), len);
-    return true;
+    return;
 }
 
 boolean Config::saveConfig()
 {
-    uint8_t buffer[ConfigMessage_size];
+    module->saveConfig();
+    uint8_t buffer[GlobalConfigMessage_size];
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-    boolean status = pb_encode(&stream, ConfigMessage_fields, &config);
+    boolean status = pb_encode(&stream, GlobalConfigMessage_fields, &globalConfig);
     size_t len = stream.bytes_written;
     if (!status)
     {
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("saveConfig . . . Error"));
         return false;
     }
+    else
+    {
+        uint16_t crc = crc16(buffer, len);
+        if (crc == nowCrc)
+        {
+            Debug.AddLog(LOG_LEVEL_INFO, PSTR("Check Config CRC . . . Same"));
+            return true;
+        }
+        else
+        {
+            nowCrc = crc;
+        }
+    }
 
-    nowCrc = crc16(buffer, len);
-
-    EEPROM.write(0, CFG_HOLDER >> 8);
-    EEPROM.write(1, CFG_HOLDER);
+    EEPROM.write(0, GLOBAL_CFG_VERSION >> 8);
+    EEPROM.write(1, GLOBAL_CFG_VERSION);
 
     EEPROM.write(2, len >> 8);
     EEPROM.write(3, len);
@@ -226,25 +168,49 @@ void Config::perSecondDo()
     {
         return;
     }
-    uint8_t buffer[ConfigMessage_size];
-    pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-    boolean status = pb_encode(&stream, ConfigMessage_fields, &config);
-    size_t len = stream.bytes_written;
-    if (!status)
+    saveConfig();
+}
+
+void Config::moduleReadConfig(uint16_t version, uint16_t size, const pb_field_t fields[], void *dest_struct)
+{
+    if (globalConfig.module_cfg.size == 0                                                                         // 没有数据
+        || globalConfig.cfg_version != version                                                                    // 版本不一致
+        || globalConfig.module_crc != Config::crc16(globalConfig.module_cfg.bytes, globalConfig.module_cfg.size)) // crc错误
     {
-        Debug.AddLog(LOG_LEVEL_INFO, PSTR("Check Config CRC . . . Error"));
+        Debug.AddLog(LOG_LEVEL_INFO, PSTR("moduleReadConfig . . . Error %d %d %d"), globalConfig.cfg_version, version, globalConfig.module_cfg.size);
+        module->resetConfig();
+        return;
+    }
+    memset(dest_struct, 0, size);
+    pb_istream_t stream = pb_istream_from_buffer(globalConfig.module_cfg.bytes, globalConfig.module_cfg.size);
+    bool status = pb_decode(&stream, fields, dest_struct);
+    if (!status) // 解密失败
+    {
+        module->resetConfig();
     }
     else
     {
-        uint16_t crc = crc16(buffer, len);
-        if (crc != nowCrc)
+        Debug.AddLog(LOG_LEVEL_INFO, PSTR("moduleReadConfig . . . OK Len: %d"), globalConfig.module_cfg.size);
+    }
+}
+
+boolean Config::moduleSaveConfig(uint16_t version, uint16_t size, const pb_field_t fields[], const void *src_struct)
+{
+    uint8_t buffer[size];
+    pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+    boolean status = pb_encode(&stream, fields, src_struct);
+    if (status)
+    {
+        size_t len = stream.bytes_written;
+        uint16_t crc = Config::crc16(buffer, len);
+        if (crc != globalConfig.module_crc)
         {
-            Debug.AddLog(LOG_LEVEL_INFO, PSTR("Check Config CRC . . . Different"));
-            saveConfig();
-        }
-        else
-        {
-            //Debug.AddLog(LOG_LEVEL_INFO, PSTR("Check Config CRC . . . OK"));
+            globalConfig.cfg_version = version;
+            globalConfig.module_crc = crc;
+            globalConfig.module_cfg.size = len;
+            memcpy(globalConfig.module_cfg.bytes, buffer, len);
+            Debug.AddLog(LOG_LEVEL_INFO, PSTR("moduleSaveConfig . . . OK Len: %d"), len);
         }
     }
+    return status;
 }

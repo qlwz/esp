@@ -12,7 +12,7 @@ bool Mqtt::mqttConnect()
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("wifi disconnected"));
         return false;
     }
-    if (config.mqtt.port == 0)
+    if (globalConfig.mqtt.port == 0)
     {
         return false;
     }
@@ -21,10 +21,10 @@ bool Mqtt::mqttConnect()
         return true;
     }
 
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("Connecting to %s:%d Broker . . "), config.mqtt.server, config.mqtt.port);
-    mqttClient.setServer(config.mqtt.server, config.mqtt.port);
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("Connecting to %s:%d Broker . . "), globalConfig.mqtt.server, globalConfig.mqtt.port);
+    mqttClient.setServer(globalConfig.mqtt.server, globalConfig.mqtt.port);
 
-    if (mqttClient.connect(UID, config.mqtt.user, config.mqtt.pass, getTeleTopic(F("availability")).c_str(), 0, false, "offline"))
+    if (mqttClient.connect(UID, globalConfig.mqtt.user, globalConfig.mqtt.pass, getTeleTopic(F("availability")).c_str(), 0, false, "offline"))
     {
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("(Re)Connected."));
         if (_connectedCallback != NULL)
@@ -195,14 +195,14 @@ boolean Mqtt::unsubscribe(String topic)
 String Mqtt::getTopic(uint8_t prefix, String subtopic)
 {
     // 0: Cmnd  1:Stat 2:Tele
-    String fulltopic = String(config.mqtt.topic);
+    String fulltopic = String(globalConfig.mqtt.topic);
     if ((0 == prefix) && (-1 == fulltopic.indexOf(F("%prefix%"))))
     {
         fulltopic += F("/%prefix%"); // Need prefix for commands to handle mqtt topic loops
     }
     fulltopic.replace(F("%prefix%"), (prefix == 0 ? F("cmnd") : ((prefix == 1 ? F("stat") : F("tele")))));
     fulltopic.replace(F("%hostname%"), UID);
-    fulltopic.replace(F("%module%"), module->moduleName());
+    fulltopic.replace(F("%module%"), module->moduleName);
     fulltopic.replace(F("#"), "");
     fulltopic.replace(F("//"), "/");
     if (!fulltopic.endsWith(F("/")))

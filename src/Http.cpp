@@ -4,7 +4,6 @@
 #include "Http.h"
 #include "Wifi.h"
 #include "Led.h"
-#include "template.h"
 #include "Ntp.h"
 #include <ESP8266mDNS.h>
 #include <ESP8266Webserver.h>
@@ -30,7 +29,7 @@ void Http::handleRoot()
     server->send(200, F("text/html"), "");
     String radioJs = "<script type='text/javascript'>";
     String page = F("<!DOCTYPE html><html lang='zh-cn'><head><meta charset='utf-8'/><meta name='viewport'content='width=device-width, initial-scale=1, user-scalable=no'/>");
-    page += F("<title>ESP8266(8285)模块</title>");
+    page += F("<title>{title}模块</title>");
     page += F("<style type='text/css'>body{font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif; font-size: 16px; color: #333; line-height: 1.75;} #nav{text-align: center;} #tab > div{display: none;} #nav button{background: #eee; border: 1px solid #ddd; padding: .7em 1em; cursor: pointer; z-index: 1; margin-left: -1px; outline: 0;} #nav .active{background: #fff;} table.gridtable{color: #333333; border-width: 1px; border-color: #ddd; border-collapse: collapse; margin: auto; margin-top: 15px; width: 80%;} table.gridtable th{border-width: 1.5px; padding: 8px; border-style: solid; border-color: #ddd; background-color: #f5f5f5;} table.gridtable td{border-width: 1px; padding: 8px; border-style: solid; border-color: #ddd; background-color: #ffffff;} input,select{border: 1px solid #ccc; padding: 7px 0px; border-radius: 3px; padding-left: 5px; -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075); box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075); -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s; -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s; transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s} input:focus,select:focus{border-color: #66afe9; outline: 0; -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6); box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);} #tab button{color: #fff; border-width: 0px; border-radius: 3px; cursor: pointer; outline: none; font-size: 17px; line-height: 2.4rem;; width: 100%;} #tab button[disabled]{cursor: not-allowed; filter: alpha(opacity=65); -webkit-box-shadow: none; box-shadow: none; opacity: .65;} .btn-info{background-color: #5bc0de; border-color: #46b8da;} .btn-info:hover{background-color: #31b0d5; border-color: #269abc;} .btn-success{background-color: #5cb85c; border-color: #4cae4c;} .btn-success:hover{background-color: #449d44; border-color: #398439;} .btn-danger{background-color: #d9534f; border-color: #d43f3a;} .btn-danger:hover{background-color: #c9302c; border-color: #ac2925;} .alert{width: 80%; padding: 15px; border: 1px solid transparent; border-radius: 4px; position: fixed; top: 10px; left: 10%; z-index: 999999; display: none;} label.bui-radios-label input{position: absolute; opacity: 0; visibility: hidden;} label.bui-radios-label .bui-radios{display: inline-block; position: relative; width: 13px; height: 13px; background: #FFFFFF; border: 1px solid #979797; border-radius: 50%; vertical-align: -2px;} label.bui-radios-label input:checked + .bui-radios:after{position: absolute; content: ''; width: 7px; height: 7px; background-color: #fff; border-radius: 50%; top: 3px; left: 3px;} label.bui-radios-label input:checked + .bui-radios{background: #00B066; border: 1px solid #00B066;} label.bui-radios-label input:disabled + .bui-radios{background-color: #e8e8e8; border: solid 1px #979797;} label.bui-radios-label input:disabled:checked + .bui-radios:after{background-color: #c1c1c1;} label.bui-radios-label .bui-radios{-webkit-transition: background-color ease-out .3s; transition: background-color ease-out .3s;} input[type='range']{width: 80%; height: 10px; border: 0; background-color: #f0f0f0; border-radius: 5px; position: relative; -webkit-appearance: none !important; outline: none;} input[type=range]::-webkit-slider-thumb{-webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #ff4400;} .file{position: relative; display: inline-block; background: #D0EEFF; border: 1px solid #99D3F5; border-radius: 4px; padding: 4px 12px; overflow: hidden; color: #1E88C7; text-decoration: none; text-indent: 0; line-height: 20px;} .file input{position: absolute; font-size: 100px; right: 0; top: 0; opacity: 0;} .file:hover{background: #AADFFD; border-color: #78C3F3; color: #004974; text-decoration: none;}</style>");
     page += F("<script type='text/javascript'>");
     page += F("var logIndex=0;var defIntervalTime=3000;var intervalTime=defIntervalTime;var lt;function id(d){return document.getElementById(d)}function tab(v){var divs=id('tab').children;var btns=id('nav').getElementsByTagName('button');for(var i=0;i<divs.length;i++){divs[i].style.display=divs[i]==id('tab'+v)?'block':'none';btns[i].setAttribute('class',(i+1==v?'active':''))}intervalTime=v==5?1000:defIntervalTime}function serialize(form){var field,s='';if(typeof form=='object'&&form.nodeName=='FORM'){for(var i=0;i<form.elements.length;i++){field=form.elements[i];if(field.name&&!field.disabled&&field.type!='file'&&field.type!='reset'&&field.type!='submit'&&field.type!='button'){if((field.type!='checkbox'&&field.type!='radio')||field.checked){s+=field.name+'='+encodeURIComponent(field.value)+'&'}}}}if(s.length>1){s=s.substring(0,s.length-1)}return s}function ajax(){var ajaxData={type:(arguments[0].type||'GET').toUpperCase(),url:arguments[0].url||'',data:arguments[0].data||null,success:arguments[0].success||function(){},error:arguments[0].error||function(){}};var xhr=window.XMLHttpRequest?new XMLHttpRequest():new ActiveXObject('Microsoft.XMLHTTP');xhr.responseType='json';xhr.open(ajaxData.type,ajaxData.url);if(ajaxData.type=='POST'){xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=utf-8');xhr.send(ajaxData.data)}else{xhr.send()}xhr.onreadystatechange=function(){if(xhr.readyState==4){if(xhr.status==200){ajaxData.success(xhr.response)}else{ajaxData.error()}if(ajaxData.url=='/get_status'){lt=setTimeout(get_status,intervalTime)}}}}function toast(msg,duration,isok){var m=id('alert');m.innerHTML=msg;m.style.cssText=isok?'color: #3c763d;background-color: #dff0d8;border-color: #d6e9c6;':'color: #a94442; background-color: #f2dede; border-color: #ebccd1;';m.style.display='block';setTimeout(function(){var d=0.5;m.style.webkitTransition='-webkit-transform '+d+'s ease-in, opacity '+d+'s ease-in';m.style.opacity='0';setTimeout(function(){m.style.display='none'},d*1000)},duration)}function postform(the){ajaxPost(the.getAttribute('action'),serialize(the));return false}function getRadioValue(radioName){var radios=document.getElementsByName(radioName);for(var i=0;i<radios.length;i++){var radio=radios.item(i);if(radio.checked){return radio.value}}return undefined}function setRadioValue(radioName,value){var radios=document.getElementsByName(radioName);for(var i=0;i<radios.length;i++){var radio=radios.item(i);if(radio.value==value){radio.checked=true;return}}}function ajaxPost(url,data,callback){ajax({type:'POST',url:url,dataType:'json',data:data,success:function(data){if(typeof(callback)=='function'){if(callback(data)===true){return}}if(data.msg){toast(data.msg,data.code?3000:5000,data.code)}if(data.data){setData(data.data)}},error:function(){toast('<strong>Oh snap!</strong> 请求出错！',5000,false)}})}function get_status(){clearTimeout(lt);ajaxPost('/get_status','i='+logIndex)}window.addEventListener('load',get_status);");
@@ -38,7 +37,8 @@ void Http::handleRoot()
     page += F("</script>");
 
     page += F("</head><body><div id='alert' class='alert'></div>");
-    page += F("<h1 style='text-align:center'>ESP8266(8285)模块</h1>");
+    page += F("<h1 style='text-align:center'>{title}模块</h1>");
+    page.replace(F("{title}"), module->moduleCNName);
 
     page += F("<div id='nav'>");
     page += F("<button onclick='tab(1)'class='active'>状态</button>");
@@ -84,7 +84,7 @@ void Http::handleRoot()
     page.replace(F("{uptime}"), Ntp::msToHumanString(millis()));
     page.replace(F("{free_mem}"), String(ESP.getFreeHeap()));
     page.replace(F("{localIP}"), WiFi.localIP().toString());
-    page.replace(F("{DHCP}"), (!config.wifi.is_static ? F("DHCP") : F("静态IP")));
+    page.replace(F("{DHCP}"), (!globalConfig.wifi.is_static ? F("DHCP") : F("静态IP")));
     // TAB 1 End
 
     server->sendContent(page);
@@ -111,7 +111,7 @@ void Http::handleRoot()
     page += F("<label class='bui-radios-label'><input type='radio' name='dhcp' value='2' onchange='dhcponchange(this)'/><i class='bui-radios'></i> 静态IP</label>");
     page += F("</td></tr>");
     radioJs += F("setRadioValue('dhcp', '{v}');");
-    radioJs.replace(F("{v}"), config.wifi.is_static ? F("2") : F("1"));
+    radioJs.replace(F("{v}"), globalConfig.wifi.is_static ? F("2") : F("1"));
 
     page += F("<tr class='dhcp_hide'><td>静态IP</td><td><input type='text' name='static_ip' placeholder='静态IP' value='{ip}'></td></tr>");
     page += F("<tr class='dhcp_hide'><td>子网掩码</td><td><input type='text' name='static_netmask' placeholder='子网掩码' value='{sn}'></td></tr>");
@@ -119,9 +119,9 @@ void Http::handleRoot()
     page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>保存</button></td></tr>");
     page += F("</tbody></table></form>");
     page += F("<script type='text/javascript'>function dhcponchange(the){var v=getRadioValue('dhcp');var dom=document.getElementsByClassName('dhcp_hide');for(var i=0;i<dom.length;i++){dom[i].style.display=v==2?'':'none'}}dhcponchange(null);</script>");
-    page.replace(F("{ip}"), config.wifi.ip);
-    page.replace(F("{sn}"), config.wifi.sn);
-    page.replace(F("{gw}"), config.wifi.gw);
+    page.replace(F("{ip}"), globalConfig.wifi.ip);
+    page.replace(F("{sn}"), globalConfig.wifi.sn);
+    page.replace(F("{gw}"), globalConfig.wifi.gw);
 
     page += F("<form method='post' action='/mqtt' onsubmit='postform(this);return false'>");
     page += F("<table class='gridtable'><thead><tr><th colspan='2'>MQTT设置</th></tr></thead><tbody>");
@@ -133,11 +133,11 @@ void Http::handleRoot()
     page += F("<tr><td>状态</td><td id='mqttconnected'>{mqttconnected}</td></tr>");
     page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>保存</button></td></tr>");
     page += F("</tbody></table></form>");
-    page.replace(F("{server}"), config.mqtt.server);
-    page.replace(F("{port}"), String(config.mqtt.port));
-    page.replace(F("{user}"), config.mqtt.user);
-    page.replace(F("{pass}"), config.mqtt.pass);
-    page.replace(F("{topic}"), config.mqtt.topic);
+    page.replace(F("{server}"), globalConfig.mqtt.server);
+    page.replace(F("{port}"), String(globalConfig.mqtt.port));
+    page.replace(F("{user}"), globalConfig.mqtt.user);
+    page.replace(F("{pass}"), globalConfig.mqtt.pass);
+    page.replace(F("{topic}"), globalConfig.mqtt.topic);
     page.replace(F("{mqttconnected}"), (mqtt && mqtt->mqttClient.connected() ? F("已连接") : F("未连接")));
 
     page += F("<form method='post' action='/discovery' onsubmit='postform(this);return false'>");
@@ -145,14 +145,14 @@ void Http::handleRoot()
     page += F("<tr><td>自发现状态</td><td id='discovery'>{discovery}</td></tr>");
     page += F("<tr><td>自发现前缀</td><td><input type='text' name='discovery_prefix' placeholder='自发现前缀' required value='{prefix}'></td></tr>");
     page += F("<tr><td colspan='2'><button type='submit' class='btn-info' id='discovery_btn'>打开MQTT自动发现</button></td></tr>");
-    if (config.mqtt.discovery)
+    if (globalConfig.mqtt.discovery)
     {
         radioJs += F("id('discovery_btn').setAttribute('class', 'btn-danger');id('discovery_btn').innerHTML='关闭MQTT自动发现';");
     }
     page += F("</tbody></table></form>");
     page += F("</div>");
-    page.replace(F("{discovery}"), config.mqtt.discovery ? F("已启动") : F("未启动"));
-    page.replace(F("{prefix}"), config.mqtt.discovery_prefix);
+    page.replace(F("{discovery}"), globalConfig.mqtt.discovery ? F("已启动") : F("未启动"));
+    page.replace(F("{prefix}"), globalConfig.mqtt.discovery_prefix);
     // TAB 2 End
 
     // TAB 3 Start
@@ -166,38 +166,20 @@ void Http::handleRoot()
 
     page = F("<form method='post' action='/module_setting' onsubmit='postform(this);return false'>");
     page += F("<table class='gridtable'><thead><tr><th colspan='2'>模块设置</th></tr></thead><tbody>");
-
-    if (SupportedModules::END > 1)
-    {
-        page += F("<tr><td>模块类型</td><td>");
-        page += F("<select id='module_type' name='module_type' style='width:150px'>");
-        for (int count = 0; count < SupportedModules::END; count++)
-        {
-            page += F("<option value='");
-            page += String(count);
-            page += F("'>");
-            page += Modules[count].name;
-            page += F("</option>");
-        }
-        page += F("</select></td></tr>");
-        radioJs += F("id('module_type').value={v};");
-        radioJs.replace(F("{v}"), String(config.module_type));
-    }
-
     page += F("<tr><td>日志输出</td><td>");
     page += F("<label class='bui-radios-label'><input type='checkbox' name='log_serial' value='1'/><i class='bui-radios' style='border-radius:20%'></i> Serial</label>&nbsp;&nbsp;&nbsp;&nbsp;");
     page += F("<label class='bui-radios-label'><input type='checkbox' name='log_syslog' value='1'/><i class='bui-radios' style='border-radius:20%'></i> syslog</label>&nbsp;&nbsp;&nbsp;&nbsp;");
     page += F("<label class='bui-radios-label'><input type='checkbox' name='log_web' value='1'/><i class='bui-radios' style='border-radius:20%'></i> web</label>");
     page += F("</td></tr>");
-    if ((1 & config.debug.type) == 1)
+    if ((1 & globalConfig.debug.type) == 1)
     {
         radioJs += F("setRadioValue('log_serial', '1');");
     }
-    if ((2 & config.debug.type) == 2)
+    if ((2 & globalConfig.debug.type) == 2)
     {
         radioJs += F("setRadioValue('log_syslog', '1');");
     }
-    if ((4 & config.debug.type) == 4)
+    if ((4 & globalConfig.debug.type) == 4)
     {
         radioJs += F("setRadioValue('log_web', '1');");
     }
@@ -214,8 +196,8 @@ void Http::handleRoot()
     page += F("<button type='button' class='btn-danger' style='margin-top: 10px' onclick=\"javascript:if(confirm('确定要重置模块？')){ajaxPost('/reset');}\">重置模块</button>");
     page += F("</div>");
 
-    page.replace(F("{server}"), config.debug.server);
-    page.replace(F("{port}"), String(config.debug.port));
+    page.replace(F("{server}"), globalConfig.debug.server);
+    page.replace(F("{port}"), String(globalConfig.debug.port));
 
     page += F("</div>");
     // TAB 3 End
@@ -254,7 +236,7 @@ void Http::handleRoot()
     page += F("</div>");
     page.replace(F("{v}"), VERSION);
     page.replace(F("{v1}"), Ntp::GetBuildDateAndTime());
-    page.replace(F("{ota_url}"), config.http.ota_url);
+    page.replace(F("{ota_url}"), globalConfig.http.ota_url);
     // TAB 4 End
     server->sendContent(page);
 
@@ -292,11 +274,11 @@ void Http::handleMqtt()
         Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"MQTT主题必须包含【%prefix%/】\"}"));
         return;
     }
-    strcpy(config.mqtt.server, server->arg(F("mqtt_server")).c_str());
-    config.mqtt.port = atoi(server->arg(F("mqtt_port")).c_str());
-    strcpy(config.mqtt.user, server->arg(F("mqtt_username")).c_str());
-    strcpy(config.mqtt.pass, server->arg(F("mqtt_password")).c_str());
-    strcpy(config.mqtt.topic, topic.c_str());
+    strcpy(globalConfig.mqtt.server, server->arg(F("mqtt_server")).c_str());
+    globalConfig.mqtt.port = atoi(server->arg(F("mqtt_port")).c_str());
+    strcpy(globalConfig.mqtt.user, server->arg(F("mqtt_username")).c_str());
+    strcpy(globalConfig.mqtt.pass, server->arg(F("mqtt_password")).c_str());
+    strcpy(globalConfig.mqtt.topic, topic.c_str());
     Config::saveConfig();
     mqtt->setTopic();
 
@@ -359,14 +341,14 @@ void Http::handledhcp()
         return;
     }
 
-    boolean old = config.wifi.is_static;
-    config.wifi.is_static = server->arg(F("dhcp")).equals(F("2"));
-    strcpy(config.wifi.ip, ip.c_str());
-    strcpy(config.wifi.sn, netmask.c_str());
-    strcpy(config.wifi.gw, gateway.c_str());
+    boolean old = globalConfig.wifi.is_static;
+    globalConfig.wifi.is_static = server->arg(F("dhcp")).equals(F("2"));
+    strcpy(globalConfig.wifi.ip, ip.c_str());
+    strcpy(globalConfig.wifi.sn, netmask.c_str());
+    strcpy(globalConfig.wifi.gw, gateway.c_str());
     Config::saveConfig();
 
-    if (old != config.wifi.is_static)
+    if (old != globalConfig.wifi.is_static)
     {
         Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置DHCP信息成功，重启后生效\"}"));
     }
@@ -479,8 +461,8 @@ void Http::handleWifi()
 
     if (WiFi.getMode() == WIFI_STA)
     {
-        strcpy(config.wifi.ssid, wifi.c_str());
-        strcpy(config.wifi.pass, password.c_str());
+        strcpy(globalConfig.wifi.ssid, wifi.c_str());
+        strcpy(globalConfig.wifi.pass, password.c_str());
         Config::saveConfig();
         Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置WiFi信息成功。\"}"));
     }
@@ -497,15 +479,15 @@ void Http::handleDiscovery()
     {
         return;
     }
-    strcpy(config.mqtt.discovery_prefix, server->arg(F("discovery_prefix")).c_str());
-    config.mqtt.discovery = !config.mqtt.discovery;
+    strcpy(globalConfig.mqtt.discovery_prefix, server->arg(F("discovery_prefix")).c_str());
+    globalConfig.mqtt.discovery = !globalConfig.mqtt.discovery;
     Config::saveConfig();
 
     if (module)
     {
-        module->mqttDiscovery(config.mqtt.discovery);
+        module->mqttDiscovery(globalConfig.mqtt.discovery);
     }
-    if (config.mqtt.discovery)
+    if (globalConfig.mqtt.discovery)
     {
         Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经打开MQTT自发现。\",\"data\":{\"discovery\":1}}"));
     }
@@ -550,10 +532,10 @@ void Http::handleOTA()
     {
         return;
     }
-    strcpy(config.http.ota_url, server->arg(F("ota_url")).c_str());
+    strcpy(globalConfig.http.ota_url, server->arg(F("ota_url")).c_str());
     Config::saveConfig();
     Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"如果成功后设备会重启 . . . \"}"));
-    Wifi::OTA(String(config.http.ota_url));
+    Wifi::OTA(String(globalConfig.http.ota_url));
 }
 
 void Http::handleNotFound()
@@ -601,7 +583,7 @@ void Http::handleGetStatus()
     data += mqtt && mqtt->mqttClient.connected() ? F("已连接") : F("未连接");
 
     data += F("\",\"discovery\":");
-    data += config.mqtt.discovery ? 1 : 0;
+    data += globalConfig.mqtt.discovery ? 1 : 0;
 
     data += F(",\"uptime\":\"");
     data += Ntp::msToHumanString(millis());
@@ -618,11 +600,15 @@ void Http::handleGetStatus()
 
     data += F("\",\"free_mem\":");
     data += ESP.getFreeHeap();
-    data += F(",");
 
     if (module)
     {
-        data += module->httpGetStatus(server);
+        String tmp = module->httpGetStatus(server);
+        if (tmp.length() > 0)
+        {
+            data += F(",");
+            data += tmp;
+        }
     }
 
     data += F(",\"logindex\":");
@@ -733,8 +719,8 @@ void Http::begin()
         module->httpAdd(server);
     }
     MDNS.begin(UID);
-    server->begin(config.http.port);
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("HTTP server started port: %d"), config.http.port);
+    server->begin(globalConfig.http.port);
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("HTTP server started port: %d"), globalConfig.http.port);
 }
 
 void Http::stop()
@@ -798,33 +784,22 @@ void Http::handleModuleSetting()
                 Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"syslog服务器不能为空\"}"));
                 return;
             }
-            strcpy(config.debug.server, log_syslog_host.c_str());
-            config.debug.port = log_syslog_port.toInt();
-            WiFi.hostByName(config.debug.server, Debug.ip);
+            strcpy(globalConfig.debug.server, log_syslog_host.c_str());
+            globalConfig.debug.port = log_syslog_port.toInt();
+            WiFi.hostByName(globalConfig.debug.server, Debug.ip);
         }
 
-        config.debug.type = t;
+        globalConfig.debug.type = t;
         Config::saveConfig();
     }
-    if (Http::server->hasArg(F("module_type")) && !server->arg(F("module_type")).equals(String(config.module_type)))
-    {
-        Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经更换模块类型 . . . 正在重启中。\"}"));
-        config.module_type = server->arg(F("module_type")).toInt();
-        Config::saveConfig();
-        Led::blinkLED(400, 4);
-        ESP.restart();
-    }
-    else
-    {
-        Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经修改成功\"}"));
-    }
+    Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经修改成功\"}"));
 }
 
 boolean Http::checkAuth()
 {
-    if (config.http.user[0] != 0 && config.http.pass[0] != 0 && server->client().localIP().toString() != "192.168.4.1")
+    if (globalConfig.http.user[0] != 0 && globalConfig.http.pass[0] != 0 && server->client().localIP().toString() != "192.168.4.1")
     {
-        if (!server->authenticate(config.http.user, config.http.pass))
+        if (!server->authenticate(globalConfig.http.user, globalConfig.http.pass))
         {
             server->requestAuthentication();
             return false;

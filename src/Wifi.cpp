@@ -28,7 +28,7 @@ void Wifi::OTA(String url)
         url.replace("%d", String(ESP.getChipId()));
     }
     url.replace(F("%hostname%"), UID);
-    url.replace(F("%module%"), module->moduleName());
+    url.replace(F("%module%"), module->moduleName);
 
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("OTA Url: %s"), url.c_str());
     Led::blinkLED(200, 5);
@@ -42,7 +42,7 @@ void Wifi::OTA(String url)
 void Wifi::connectWifi()
 {
     delay(50);
-    if (config.wifi.ssid[0] != '\0')
+    if (globalConfig.wifi.ssid[0] != '\0')
     {
         setupWifi();
     }
@@ -61,27 +61,27 @@ void Wifi::setupWifi()
     WiFi.setAutoConnect(true);
     WiFi.setAutoReconnect(true);
     WiFi.hostname(UID);
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("Connecting to %s %s Wifi"), config.wifi.ssid, config.wifi.pass);
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("Connecting to %s %s Wifi"), globalConfig.wifi.ssid, globalConfig.wifi.pass);
     STAGotIP = WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP &event) {
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("WiFi1 connected. SSID: %s IP address: %s"), WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
-        if (config.wifi.is_static && String(config.wifi.ip).equals(WiFi.localIP().toString()))
+        if (globalConfig.wifi.is_static && String(globalConfig.wifi.ip).equals(WiFi.localIP().toString()))
         {
             isDHCP = false;
         }
     });
-    if (config.wifi.is_static)
+    if (globalConfig.wifi.is_static)
     {
         isDHCP = false;
         IPAddress static_ip;
         IPAddress static_sn;
         IPAddress static_gw;
-        static_ip.fromString(config.wifi.ip);
-        static_sn.fromString(config.wifi.sn);
-        static_gw.fromString(config.wifi.gw);
-        Debug.AddLog(LOG_LEVEL_INFO, PSTR("Custom STA IP/GW/Subnet: %s %s %s"), config.wifi.ip, config.wifi.sn, config.wifi.gw);
+        static_ip.fromString(globalConfig.wifi.ip);
+        static_sn.fromString(globalConfig.wifi.sn);
+        static_gw.fromString(globalConfig.wifi.gw);
+        Debug.AddLog(LOG_LEVEL_INFO, PSTR("Custom STA IP/GW/Subnet: %s %s %s"), globalConfig.wifi.ip, globalConfig.wifi.sn, globalConfig.wifi.gw);
         WiFi.config(static_ip, static_gw, static_sn);
     }
-    WiFi.begin(config.wifi.ssid, config.wifi.pass);
+    WiFi.begin(globalConfig.wifi.ssid, globalConfig.wifi.pass);
 }
 
 void Wifi::setupWifiManager(bool resetSettings)
@@ -153,8 +153,8 @@ void Wifi::loop()
 
     if (_ssid.length() > 0 && WiFi.isConnected())
     {
-        strcpy(config.wifi.ssid, _ssid.c_str());
-        strcpy(config.wifi.pass, _pass.c_str());
+        strcpy(globalConfig.wifi.ssid, _ssid.c_str());
+        strcpy(globalConfig.wifi.pass, _pass.c_str());
         Config::saveConfig();
 
         //	为了使WEB获取到IP 2秒后才关闭AP

@@ -38,23 +38,23 @@ void Config::resetConfig()
     memset(&globalConfig, 0, sizeof(GlobalConfigMessage));
 
 #ifdef WIFI_SSID
-    strcpy(globalConfig.wifi_ssid, WIFI_SSID);
+    strcpy(globalConfig.wifi.ssid, WIFI_SSID);
 #endif
 #ifdef WIFI_PASS
-    strcpy(globalConfig.wifi_pass, WIFI_PASS);
+    strcpy(globalConfig.wifi.pass, WIFI_PASS);
 
 #endif
 #ifdef MQTT_SERVER
-    strcpy(globalConfig.mqtt_server, MQTT_SERVER);
+    strcpy(globalConfig.mqtt.server, MQTT_SERVER);
 #endif
 #ifdef MQTT_PORT
-    globalConfig.mqtt_port = MQTT_PORT;
+    globalConfig.mqtt.port = MQTT_PORT;
 #endif
 #ifdef MQTT_USER
-    strcpy(globalConfig.mqtt_user, MQTT_USER);
+    strcpy(globalConfig.mqtt.user, MQTT_USER);
 #endif
 #ifdef MQTT_PASS
-    strcpy(globalConfig.mqtt_pass, MQTT_PASS);
+    strcpy(globalConfig.mqtt.pass, MQTT_PASS);
 #endif
     globalConfig.mqtt.discovery = false;
     strcpy(globalConfig.mqtt.discovery_prefix, "homeassistant");

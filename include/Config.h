@@ -14,8 +14,13 @@
 
 #define HOST_PREFIX "ESP_%06X" // Hostname
 
-#define WifiManager_ConfigPortalTimeOut 120
-#define MinimumWifiSignalQuality 8
+//#define WIFI_SSID "qlwz"     // WiFi ssid
+//#define WIFI_PASS "" // WiFi 密码
+
+//#define MQTT_SERVER "10.0.0.25"   // MQTTַ 地址
+//#define MQTT_PORT 1883            // MQTT 端口
+//#define MQTT_USER "mqtt"          // MQTT 用户名
+//#define MQTT_PASS "" // MQTT 密码
 
 #define MQTT_FULLTOPIC "%module%/%hostname%/%prefix%/" // MQTT 主题格式
 #define VERSION "2019.12.07.2300"                      // 版本
@@ -25,6 +30,9 @@
 #define OTA_URL "http://10.0.0.50/esp/%module%.bin"
 
 #define WEB_LOG_SIZE 4000 // Max number of characters in weblog
+
+#define WifiManager_ConfigPortalTimeOut 120
+#define MinimumWifiSignalQuality 8
 
 extern Module *module;
 

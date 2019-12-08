@@ -113,7 +113,7 @@ void Config::readConfig()
         resetConfig();
     }
     module->readConfig();
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("readConfig . . . OK Len: %d"), len);
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("readConfig       . . . OK Len: %d"), len);
     return;
 }
 

@@ -14,6 +14,8 @@ void RelayButton::set(uint8_t _ch, uint8_t _io)
     io = _io;
     pinMode(io, INPUT_PULLUP);
     previousState = digitalRead(io);
+    //delay(debounceTime);
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("load button ch%d io%d"), ch + 1, io);
 }
 
 void RelayButton::loop()

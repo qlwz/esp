@@ -12,7 +12,7 @@ protected:
     uint8_t ch = -1;
     uint8_t io = -1;
     // 按键
-    int debounceTime = 20;
+    int debounceTime = 50;
     boolean timing = false;
     unsigned long timingStart = 0;
     unsigned long intervalStart, now;

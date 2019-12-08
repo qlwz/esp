@@ -18,7 +18,7 @@ typedef struct
     uint16_t day_of_year;
     uint16_t year;
     unsigned long days;
-    unsigned long valid;
+    boolean valid;
 } TIME_T;
 
 class Ntp

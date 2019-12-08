@@ -63,7 +63,10 @@ void Relay::init()
         {
             btns[ch].set(ch, GPIO_PIN[GPIO_KEY1 + ch]);
         }
+    }
 
+    for (uint8_t ch = 0; ch < Relay::channels; ch++)
+    {
         // 0:开关通电时断开  1 : 开关通电时闭合  2 : 开关通电时状态与断电前相反  3 : 开关通电时保持断电前状态
         if (config.power_on_state == 2)
         {

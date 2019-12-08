@@ -9,8 +9,8 @@
 class Module
 {
 public:
-    char moduleName[10];
-    char moduleCNName[15];
+    char moduleName[30];
+    char moduleCNName[30];
     virtual void init();
     virtual bool moduleLed();
 

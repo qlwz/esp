@@ -86,10 +86,12 @@ void setup()
     module = new Weile();
 #endif
 
-    Config::readConfig();
+    Serial.print("\r\n\r\n");
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("---------------------  v%s  %s  -------------------"), VERSION, Ntp::GetBuildDateAndTime().c_str());
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("UID: %s"), UID);
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("Config Len: %d"), GlobalConfigMessage_size + 6);
+    //Debug.AddLog(LOG_LEVEL_INFO, PSTR("Config Len: %d"), GlobalConfigMessage_size + 6);
+
+    Config::readConfig();
     //Config::resetConfig();
     if (MQTT_MAX_PACKET_SIZE == 128)
     {
@@ -97,13 +99,13 @@ void setup()
     }
 
     mqtt = new Mqtt();
+    module->init();
+
     tickerPerSecond = new Ticker();
     tickerPerSecond->attach(1, tickerPerSecondDo);
     Http::begin();
     Wifi::connectWifi();
     Ntp::init();
-
-    module->init();
 
     mqtt->setClient(Wifi::wifiClient);
     mqtt->mqttSetConnectedCallback(connectedCallback);

@@ -12,8 +12,6 @@
 
 void Cover::init()
 {
-    strcpy(moduleName, "cover");
-    strcpy(moduleCNName, "杜亚窗帘");
     if (config.weak_switch == 126)
     {
         config.weak_switch = 127;
@@ -28,6 +26,16 @@ void Cover::init()
     {
         Led::init(config.pin_led > 30 ? config.pin_led - 30 : config.pin_led, config.pin_led > 30 ? HIGH : LOW);
     }
+}
+
+String Cover::getModuleName()
+{
+    return F("cover");
+}
+
+String Cover::getModuleCNName()
+{
+    return F("杜亚窗帘");
 }
 
 bool Cover::moduleLed()

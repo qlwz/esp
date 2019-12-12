@@ -38,7 +38,7 @@ void Http::handleRoot()
 
     page += F("</head><body><div id='alert' class='alert'></div>");
     page += F("<h1 style='text-align:center'>{title}模块</h1>");
-    page.replace(F("{title}"), module->moduleCNName);
+    page.replace(F("{title}"), module->getModuleCNName());
 
     page += F("<div id='nav'>");
     page += F("<button onclick='tab(1)'class='active'>状态</button>");
@@ -166,11 +166,13 @@ void Http::handleRoot()
 
     page = F("<form method='post' action='/module_setting' onsubmit='postform(this);return false'>");
     page += F("<table class='gridtable'><thead><tr><th colspan='2'>模块设置</th></tr></thead><tbody>");
+    page += F("<tr><td>主机名</td><td><input type='text' name='uid' value='{UID}'>&nbsp;具有唯一性，留空默认</td></tr>");
     page += F("<tr><td>日志输出</td><td>");
     page += F("<label class='bui-radios-label'><input type='checkbox' name='log_serial' value='1'/><i class='bui-radios' style='border-radius:20%'></i> Serial</label>&nbsp;&nbsp;&nbsp;&nbsp;");
     page += F("<label class='bui-radios-label'><input type='checkbox' name='log_syslog' value='1'/><i class='bui-radios' style='border-radius:20%'></i> syslog</label>&nbsp;&nbsp;&nbsp;&nbsp;");
     page += F("<label class='bui-radios-label'><input type='checkbox' name='log_web' value='1'/><i class='bui-radios' style='border-radius:20%'></i> web</label>");
     page += F("</td></tr>");
+    page.replace(F("{UID}"), UID);
     if ((1 & globalConfig.debug.type) == 1)
     {
         radioJs += F("setRadioValue('log_serial', '1');");
@@ -790,9 +792,20 @@ void Http::handleModuleSetting()
         }
 
         globalConfig.debug.type = t;
-        Config::saveConfig();
     }
-    Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经修改成功\"}"));
+    String uid = Http::server->arg(F("uid"));
+    strcpy(globalConfig.uid, uid.c_str());
+    Config::saveConfig();
+    if (uid.length() == 0 || strncmp(globalConfig.uid, UID, uid.length()) != 0)
+    {
+        Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"修改了重要配置 . . . 正在重启中。\"}"));
+        Led::blinkLED(400, 4);
+        ESP.restart();
+    }
+    else
+    {
+        Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经修改成功\"}"));
+    }
 }
 
 boolean Http::checkAuth()

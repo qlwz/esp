@@ -8,8 +8,6 @@
 
 void Zinguo::init()
 {
-    strcpy(moduleName, "zinguo");
-    strcpy(moduleCNName, "峥果浴霸");
     pinMode(PIN_DATA, OUTPUT);      //74HC595数据
     pinMode(PIN_LOAD, OUTPUT);      //74HC595锁存
     pinMode(PIN_CLOCK, OUTPUT);     //74HC595时钟
@@ -20,6 +18,16 @@ void Zinguo::init()
     convertTemp();                  //初始化读取温度
     dispCtrl();                     //初始化输出端口
     schTicker = new Ticker();
+}
+
+String Zinguo::getModuleName()
+{
+    return F("zinguo");
+}
+
+String Zinguo::getModuleCNName()
+{
+    return F("峥果浴霸");
 }
 
 bool Zinguo::moduleLed()

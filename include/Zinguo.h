@@ -96,6 +96,8 @@ private:
 
 public:
     void init();
+    String getModuleName();
+    String getModuleCNName();
     bool moduleLed();
 
     void loop();

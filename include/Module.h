@@ -9,9 +9,9 @@
 class Module
 {
 public:
-    char moduleName[30];
-    char moduleCNName[30];
     virtual void init();
+    virtual String getModuleName();
+    virtual String getModuleCNName();
     virtual bool moduleLed();
 
     virtual void loop();

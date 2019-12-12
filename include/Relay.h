@@ -58,6 +58,8 @@ public:
     uint8_t channels = 0;
 
     void init();
+    String getModuleName();
+    String getModuleCNName();
     bool moduleLed();
 
     void loop();
@@ -180,14 +182,14 @@ const mytmplt Modules[] PROGMEM = {
         "3 Channel",   // 3 Channel (ESP8285)
         GPIO_LED2,     // GPIO00
         GPIO_NONE,     // GPIO01
-        GPIO_KEY1,     // GPIO02
+        GPIO_LED3,     // GPIO02
         GPIO_NONE,     // GPIO03
         GPIO_KEY2,     // GPIO04
         GPIO_REL3,     // GPIO05
                        // GPIO06 (SD_CLK   Flash)
                        // GPIO07 (SD_DATA0 Flash QIO/DIO/DOUT)
                        // GPIO08 (SD_DATA1 Flash QIO/DIO/DOUT)
-        GPIO_LED3,     // GPIO09 (SD_DATA2 Flash QIO or ESP8285)
+        GPIO_KEY1,     // GPIO09 (SD_DATA2 Flash QIO or ESP8285)
         GPIO_KEY3,     // GPIO10 (SD_DATA3 Flash QIO or ESP8285)
                        // GPIO11 (SD_CMD   Flash)
         GPIO_REL2,     // GPIO12

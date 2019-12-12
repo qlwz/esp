@@ -13,8 +13,6 @@
 
 void Relay::init()
 {
-    strcpy(moduleName, "sonoff");
-    strcpy(moduleCNName, "继电器");
     if (config.led_light == 0)
     {
         config.led_light = 100;
@@ -83,6 +81,16 @@ void Relay::init()
     }
 
     checkCanLed(true);
+}
+
+String Relay::getModuleName()
+{
+    return F("relay");
+}
+
+String Relay::getModuleCNName()
+{
+    return F("继电器");
 }
 
 bool Relay::moduleLed()

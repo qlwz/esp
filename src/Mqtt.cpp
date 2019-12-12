@@ -181,7 +181,7 @@ String Mqtt::getTopic(uint8_t prefix, String subtopic)
     }
     fulltopic.replace(F("%prefix%"), (prefix == 0 ? F("cmnd") : ((prefix == 1 ? F("stat") : F("tele")))));
     fulltopic.replace(F("%hostname%"), UID);
-    fulltopic.replace(F("%module%"), module->moduleName);
+    fulltopic.replace(F("%module%"), module->getModuleName());
     fulltopic.replace(F("#"), "");
     fulltopic.replace(F("//"), "/");
     if (!fulltopic.endsWith(F("/")))

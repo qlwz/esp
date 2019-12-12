@@ -10,13 +10,21 @@
 
 void Weile::init()
 {
-    strcpy(moduleName, "weile");
-    strcpy(moduleCNName, "威乐回水器");
     if (config.pin_led != 99)
     {
         Led::init(config.pin_led > 30 ? config.pin_led - 30 : config.pin_led, config.pin_led > 30 ? HIGH : LOW);
     }
     pinMode(config.pin_rel, OUTPUT); // 继电器
+}
+
+String Weile::getModuleName()
+{
+    return F("weile");
+}
+
+String Weile::getModuleCNName()
+{
+    return F("威乐回水器");
 }
 
 bool Weile::moduleLed()

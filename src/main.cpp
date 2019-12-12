@@ -71,7 +71,6 @@ void tickerPerSecondDo()
 
 void setup()
 {
-    sprintf(UID, HOST_PREFIX, ESP.getChipId());
     Serial.begin(115200);
     EEPROM.begin(GlobalConfigMessage_size + 6);
     globalConfig.debug.type = 1;
@@ -88,10 +87,24 @@ void setup()
 
     Serial.print("\r\n\r\n");
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("---------------------  v%s  %s  -------------------"), VERSION, Ntp::GetBuildDateAndTime().c_str());
+    Config::readConfig();
+    if (globalConfig.uid[0] != '\0')
+    {
+        strcpy(UID, globalConfig.uid);
+    }
+    else
+    {
+        String mac = WiFi.macAddress();
+        mac.replace(":", "");
+        mac = mac.substring(6, 12);
+        String name =  module->getModuleName();
+        name.toUpperCase();
+        sprintf(UID, "%s_%s", name.c_str(), mac.c_str());
+    }
+
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("UID: %s"), UID);
     //Debug.AddLog(LOG_LEVEL_INFO, PSTR("Config Len: %d"), GlobalConfigMessage_size + 6);
 
-    Config::readConfig();
     //Config::resetConfig();
     if (MQTT_MAX_PACKET_SIZE == 128)
     {

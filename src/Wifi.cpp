@@ -28,7 +28,7 @@ void Wifi::OTA(String url)
         url.replace("%d", String(ESP.getChipId()));
     }
     url.replace(F("%hostname%"), UID);
-    url.replace(F("%module%"), module->moduleName);
+    url.replace(F("%module%"), module->getModuleName());
 
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("OTA Url: %s"), url.c_str());
     Led::blinkLED(200, 5);

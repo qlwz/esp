@@ -7,8 +7,8 @@
   PCB：待开源  
   
 2. 窗帘 向日葵KT82TV/W电机  
-   原贴：https://bbs.iobroker.cn/forum.php?mod=viewthread&tid=324  
-   PCB: https://bbs.iobroker.cn/forum.php?mod=viewthread&tid=329  
+   原贴：https://bbs.iobroker.cn/t/topic/847  
+   PCB: https://bbs.iobroker.cn/t/topic/852  
 
 3. 峥果浴霸 ESP8285版本  
    主要代码抄SkyNet的：https://github.com/liuzhe1947/homeassistant_zinguo_mqtt  
@@ -45,8 +45,10 @@ WEB页面开启**MQTT自动发现**
 1. 继电器  
 
 2. 窗帘  
+  [HA配置文件](https://github.com/qlwz/esp/blob/master/file/yaml/cover.yaml)  
 
 3. 峥果浴霸  
+  [HA配置文件](https://github.com/qlwz/esp/blob/master/file/yaml/zinguo.yaml)   
 
 # 图片效果 
 ![image](https://github.com/qlwz/esp/blob/master/file/images/tab1.png)  

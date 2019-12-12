@@ -12,8 +12,6 @@
 
 #define GLOBAL_CFG_VERSION 1 // 1 - 999
 
-#define HOST_PREFIX "ESP_%06X" // Hostname
-
 //#define WIFI_SSID "qlwz"     // WiFi ssid
 //#define WIFI_PASS "" // WiFi 密码
 

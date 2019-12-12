@@ -1,70 +1,70 @@
 ﻿light:
   - platform: mqtt
-    name: ESP_BDCBED_light
-    state_topic: "zinguo/ESP_BDCBED/stat/light"
-    command_topic: "zinguo/ESP_BDCBED/cmnd/light"
+    name: ZINGUO_BDCBED_light
+    state_topic: "zinguo/ZINGUO_BDCBED/stat/light"
+    command_topic: "zinguo/ZINGUO_BDCBED/cmnd/light"
     payload_on: "ON"
     payload_off: "OFF"
-    availability_topic: "zinguo/ESP_BDCBED/tele/availability"
+    availability_topic: "zinguo/ZINGUO_BDCBED/tele/availability"
     payload_available: "online"
     payload_not_available: "offline"
 
 switch:
   - platform: mqtt
-    name: ESP_BDCBED_ventilation
-    state_topic: "zinguo/ESP_BDCBED/stat/ventilation"
-    command_topic: "zinguo/ESP_BDCBED/cmnd/ventilation"
+    name: ZINGUO_BDCBED_ventilation
+    state_topic: "zinguo/ZINGUO_BDCBED/stat/ventilation"
+    command_topic: "zinguo/ZINGUO_BDCBED/cmnd/ventilation"
     payload_on: "ON"
     payload_off: "OFF"
-    availability_topic: "zinguo/ESP_BDCBED/tele/availability"
+    availability_topic: "zinguo/ZINGUO_BDCBED/tele/availability"
     payload_available: "online"
     payload_not_available: "offline"
 
   - platform: mqtt
-    name: ESP_BDCBED_close
-    state_topic: "zinguo/ESP_BDCBED/stat/close"
-    command_topic: "zinguo/ESP_BDCBED/cmnd/close"
+    name: ZINGUO_BDCBED_close
+    state_topic: "zinguo/ZINGUO_BDCBED/stat/close"
+    command_topic: "zinguo/ZINGUO_BDCBED/cmnd/close"
     payload_on: "ON"
     payload_off: "OFF"
-    availability_topic: "zinguo/ESP_BDCBED/tele/availability"
+    availability_topic: "zinguo/ZINGUO_BDCBED/tele/availability"
     payload_available: "online"
     payload_not_available: "offline"
 
   - platform: mqtt
-    name: ESP_BDCBED_blow
-    state_topic: "zinguo/ESP_BDCBED/stat/blow"
-    command_topic: "zinguo/ESP_BDCBED/cmnd/blow"
+    name: ZINGUO_BDCBED_blow
+    state_topic: "zinguo/ZINGUO_BDCBED/stat/blow"
+    command_topic: "zinguo/ZINGUO_BDCBED/cmnd/blow"
     payload_on: "ON"
     payload_off: "OFF"
-    availability_topic: "zinguo/ESP_BDCBED/tele/availability"
+    availability_topic: "zinguo/ZINGUO_BDCBED/tele/availability"
     payload_available: "online"
     payload_not_available: "offline"
 
   - platform: mqtt
-    name: ESP_BDCBED_warm1
-    state_topic: "zinguo/ESP_BDCBED/stat/warm1"
-    command_topic: "zinguo/ESP_BDCBED/cmnd/warm1"
+    name: ZINGUO_BDCBED_warm1
+    state_topic: "zinguo/ZINGUO_BDCBED/stat/warm1"
+    command_topic: "zinguo/ZINGUO_BDCBED/cmnd/warm1"
     payload_on: "ON"
     payload_off: "OFF"
-    availability_topic: "zinguo/ESP_BDCBED/tele/availability"
+    availability_topic: "zinguo/ZINGUO_BDCBED/tele/availability"
     payload_available: "online"
     payload_not_available: "offline"
 
   - platform: mqtt
-    name: ESP_BDCBED_warm2
-    state_topic: "zinguo/ESP_BDCBED/stat/warm2"
-    command_topic: "zinguo/ESP_BDCBED/cmnd/warm2"
+    name: ZINGUO_BDCBED_warm2
+    state_topic: "zinguo/ZINGUO_BDCBED/stat/warm2"
+    command_topic: "zinguo/ZINGUO_BDCBED/cmnd/warm2"
     payload_on: "ON"
     payload_off: "OFF"
-    availability_topic: "zinguo/ESP_BDCBED/tele/availability"
+    availability_topic: "zinguo/ZINGUO_BDCBED/tele/availability"
     payload_available: "online"
     payload_not_available: "offline"
        
 sensor:
   - platform: mqtt
-    name: ESP_BDCBED_temp
-    state_topic: "zinguo/ESP_BDCBED/stat/temp"
-    availability_topic: "zinguo/ESP_BDCBED/tele/availability"
+    name: ZINGUO_BDCBED_temp
+    state_topic: "zinguo/ZINGUO_BDCBED/stat/temp"
+    availability_topic: "zinguo/ZINGUO_BDCBED/tele/availability"
     payload_available: "online"
     payload_not_available: "offline"
     unit_of_measurement: °C
@@ -72,35 +72,35 @@ sensor:
 
 homeassistant:
   customize:
-    light.ESP_BDCBED_light:
+    light.ZINGUO_BDCBED_light:
       icon: mdi:lightbulb
       friendly_name: 照明
-    switch.ESP_BDCBED_ventilation:
+    switch.ZINGUO_BDCBED_ventilation:
       icon: mdi:fan
       friendly_name: 换气
-    switch.ESP_BDCBED_close:
+    switch.ZINGUO_BDCBED_close:
       icon: mdi:fan
       friendly_name: 全关
-    switch.ESP_BDCBED_blow:
+    switch.ZINGUO_BDCBED_blow:
       icon: mdi:fan
       friendly_name: 吹风
-    switch.ESP_BDCBED_warm1:
+    switch.ZINGUO_BDCBED_warm1:
       icon: mdi:radiator
       friendly_name: 暖I
-    switch.ESP_BDCBED_warm2:
+    switch.ZINGUO_BDCBED_warm2:
       icon: mdi:radiator
       friendly_name: 暖II
-    sensor.ESP_BDCBED_temp:
+    sensor.ZINGUO_BDCBED_temp:
       friendly_name: 温度
     
 group:
   yuba:
     name: '浴霸开关'
     entities:
-      - light.ESP_BDCBED_light
-      - switch.ESP_BDCBED_ventilation
-      - switch.ESP_BDCBED_close
-      - switch.ESP_BDCBED_blow
-      - switch.ESP_BDCBED_warm1
-      - switch.ESP_BDCBED_warm2
-      - sensor.ESP_BDCBED_temp
+      - light.ZINGUO_BDCBED_light
+      - switch.ZINGUO_BDCBED_ventilation
+      - switch.ZINGUO_BDCBED_close
+      - switch.ZINGUO_BDCBED_blow
+      - switch.ZINGUO_BDCBED_warm1
+      - switch.ZINGUO_BDCBED_warm2
+      - sensor.ZINGUO_BDCBED_temp

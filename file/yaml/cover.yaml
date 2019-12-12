@@ -1,10 +1,10 @@
 ﻿cover:
   - platform: mqtt
     name: "MQTT Cover"
-    command_topic: "cover/ESP_8F6324/cmnd/set"
-    position_topic: "cover/ESP_8F6324/stat/position"
-    availability_topic: "cover/ESP_8F6324/tele/availability"
-    set_position_topic: "cover/ESP_8F6324/cmnd/set_position"
+    command_topic: "cover/COVER_8F6324/cmnd/set"
+    position_topic: "cover/COVER_8F6324/stat/position"
+    availability_topic: "cover/COVER_8F6324/tele/availability"
+    set_position_topic: "cover/COVER_8F6324/cmnd/set_position"
     qos: 0
     retain: false
     payload_open: "OPEN"

@@ -1,6 +1,5 @@
 #ifdef USE_COVER
 
-#include <softwareSerial.h>
 #include <DOOYACommand.h>
 #include "Debug.h"
 #include "Led.h"

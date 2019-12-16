@@ -112,9 +112,11 @@ void Config::readConfig()
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("readConfig . . . Error"));
         resetConfig();
     }
-    module->readConfig();
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("readConfig       . . . OK Len: %d"), len);
-    return;
+    else
+    {
+        module->readConfig();
+        Debug.AddLog(LOG_LEVEL_INFO, PSTR("readConfig       . . . OK Len: %d"), len);
+    }
 }
 
 boolean Config::saveConfig()

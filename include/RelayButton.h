@@ -4,7 +4,7 @@
 #ifndef _RELAYBUTTON_h
 #define _RELAYBUTTON_h
 
-#include "arduino.h"
+#include "Arduino.h"
 
 class RelayButton
 {

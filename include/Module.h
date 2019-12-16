@@ -3,7 +3,7 @@
 #ifndef _MODULE_h
 #define _MODULE_h
 
-#include "arduino.h"
+#include "Arduino.h"
 #include <ESP8266WebServer.h>
 
 class Module

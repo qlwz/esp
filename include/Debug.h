@@ -3,7 +3,7 @@
 #ifndef _DEBUG_h
 #define _DEBUG_h
 
-#include "arduino.h"
+#include "Arduino.h"
 #include <ESP8266WiFi.h>
 #include "Config.h"
 

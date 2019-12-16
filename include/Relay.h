@@ -4,7 +4,7 @@
 #ifndef _RELAY_h
 #define _RELAY_h
 
-#include "arduino.h"
+#include "Arduino.h"
 #include <Ticker.h>
 #include <ESP8266WebServer.h>
 #include "RelayConfig.pb.h"
@@ -140,11 +140,11 @@ const mytmplt Modules[] PROGMEM = {
     },
     {
         "1 Channel",   // 3 Channel (ESP8285)
-        GPIO_NONE,     // GPIO00
+        GPIO_LED1,     // GPIO00
         GPIO_NONE,     // GPIO01
-        GPIO_KEY1,     // GPIO02
+        GPIO_NONE,     // GPIO02
         GPIO_NONE,     // GPIO03
-        GPIO_NONE,     // GPIO04
+        GPIO_KEY1,     // GPIO04
         GPIO_NONE,     // GPIO05
                        // GPIO06 (SD_CLK   Flash)
                        // GPIO07 (SD_DATA0 Flash QIO/DIO/DOUT)
@@ -155,47 +155,47 @@ const mytmplt Modules[] PROGMEM = {
         GPIO_NONE,     // GPIO12
         GPIO_RFRECV,   // GPIO13
         GPIO_REL1,     // GPIO14
-        GPIO_LED1,     // GPIO15
+        GPIO_NONE,     // GPIO15
         GPIO_LED_POWER // GPIO16 Led (1 = On, 0 = Off) - Link and Power status
     },
     {
         "2 Channel",   // 3 Channel (ESP8285)
-        GPIO_LED2,     // GPIO00
+        GPIO_LED1,     // GPIO00
         GPIO_NONE,     // GPIO01
-        GPIO_KEY1,     // GPIO02
+        GPIO_LED2,     // GPIO02
         GPIO_NONE,     // GPIO03
-        GPIO_KEY2,     // GPIO04
+        GPIO_KEY1,     // GPIO04
         GPIO_NONE,     // GPIO05
                        // GPIO06 (SD_CLK   Flash)
                        // GPIO07 (SD_DATA0 Flash QIO/DIO/DOUT)
                        // GPIO08 (SD_DATA1 Flash QIO/DIO/DOUT)
-        GPIO_NONE,     // GPIO09 (SD_DATA2 Flash QIO or ESP8285)
+        GPIO_KEY2,     // GPIO09 (SD_DATA2 Flash QIO or ESP8285)
         GPIO_NONE,     // GPIO10 (SD_DATA3 Flash QIO or ESP8285)
                        // GPIO11 (SD_CMD   Flash)
         GPIO_REL2,     // GPIO12
         GPIO_RFRECV,   // GPIO13
         GPIO_REL1,     // GPIO14
-        GPIO_LED1,     // GPIO15
+        GPIO_LED3,     // GPIO15
         GPIO_LED_POWER // GPIO16 Led (1 = On, 0 = Off) - Link and Power status
     },
     {
         "3 Channel",   // 3 Channel (ESP8285)
-        GPIO_LED2,     // GPIO00
+        GPIO_LED1,     // GPIO00
         GPIO_NONE,     // GPIO01
-        GPIO_LED3,     // GPIO02
+        GPIO_LED2,     // GPIO02
         GPIO_NONE,     // GPIO03
-        GPIO_KEY2,     // GPIO04
+        GPIO_KEY1,     // GPIO04
         GPIO_REL3,     // GPIO05
                        // GPIO06 (SD_CLK   Flash)
                        // GPIO07 (SD_DATA0 Flash QIO/DIO/DOUT)
                        // GPIO08 (SD_DATA1 Flash QIO/DIO/DOUT)
-        GPIO_KEY1,     // GPIO09 (SD_DATA2 Flash QIO or ESP8285)
+        GPIO_KEY2,     // GPIO09 (SD_DATA2 Flash QIO or ESP8285)
         GPIO_KEY3,     // GPIO10 (SD_DATA3 Flash QIO or ESP8285)
                        // GPIO11 (SD_CMD   Flash)
         GPIO_REL2,     // GPIO12
         GPIO_RFRECV,   // GPIO13
         GPIO_REL1,     // GPIO14
-        GPIO_LED1,     // GPIO15
+        GPIO_LED3,     // GPIO15
         GPIO_LED_POWER // GPIO16 Led (1 = On, 0 = Off) - Link and Power status
     },
     {

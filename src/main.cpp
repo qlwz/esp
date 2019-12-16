@@ -97,9 +97,7 @@ void setup()
         String mac = WiFi.macAddress();
         mac.replace(":", "");
         mac = mac.substring(6, 12);
-        String name =  module->getModuleName();
-        name.toUpperCase();
-        sprintf(UID, "%s_%s", name.c_str(), mac.c_str());
+        sprintf(UID, "%s_%s", module->getModuleName().c_str(), mac.c_str());
     }
 
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("UID: %s"), UID);

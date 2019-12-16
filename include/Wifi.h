@@ -3,7 +3,7 @@
 #ifndef _WIFI_h
 #define _WIFI_h
 
-#include "arduino.h"
+#include "Arduino.h"
 #include <WiFiClient.h>
 #include <DNSServer.h>
 

@@ -4,8 +4,8 @@
 #ifndef _COVER_h
 #define _COVER_h
 
-#include "arduino.h"
-#include <softwareSerial.h>
+#include "Arduino.h"
+#include <SoftwareSerial.h>
 #include <ESP8266WebServer.h>
 #include "CoverConfig.pb.h"
 #include "Module.h"

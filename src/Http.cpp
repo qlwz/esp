@@ -6,8 +6,8 @@
 #include "Led.h"
 #include "Ntp.h"
 #include <ESP8266mDNS.h>
-#include <ESP8266Webserver.h>
-#include <ESP8266HTTPUpdateserver.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
 
 ESP8266WebServer *Http::server;
 ESP8266HTTPUpdateServer httpUpdater;

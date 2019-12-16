@@ -56,11 +56,14 @@ void Zinguo::perSecondDo()
         convertTemp();
     }
 
+#ifndef SkyNet
     if (bitRead(controlLED, KEY_CLOSE_ALL - 1))
     {
         controlLED &= ~(1 << 2);
+        controlOut &= ~(1 << 2);
         mqtt->publish(mqtt->getStatTopic("close"), "OFF");
     }
+#endif
 
     // 每1s输出一次
     //Serial.println(controlPin, BIN);
@@ -134,7 +137,7 @@ void Zinguo::mqttCallback(String topicStr, String str)
     }
     else if (topicStr.endsWith("/close"))
     {
-        switchCloseAll(true);
+        switchCloseAll(str == "ON" ? true : (str == "OFF" ? false : !bitRead(controlOut, KEY_VENTILATION - 1)));
     }
     else if (topicStr.endsWith("/warm2"))
     {
@@ -798,7 +801,19 @@ void Zinguo::switchBlow(boolean isOn, bool isBeep)
 // 全关 Key3
 void Zinguo::switchCloseAll(boolean isOn, bool isBeep)
 {
-    controlLED |= (1 << 2);
+    if (isOn)
+    {
+        controlLED |= (1 << 2);
+        controlOut |= (1 << 2);
+    }
+    else
+    {
+        controlLED &= ~(1 << 2);
+        controlOut &= ~(1 << 2);
+    }
+#ifdef SkyNet
+    mqtt->publish("cmnd/rsq/POWER", isOn ? "ON" : "OFF");
+#else
     dispCtrl();
     mqtt->publish(mqtt->getStatTopic("close"), isOn ? "ON" : "OFF");
     switchLight(false, false);
@@ -806,7 +821,8 @@ void Zinguo::switchCloseAll(boolean isOn, bool isBeep)
     switchBlow(false, false);
     switchWarm1(false, false);
     switchWarm2(false, false);
-    if (config.beep)
+#endif
+    if (isBeep && config.beep)
     {
         beepBeep(1);
     }

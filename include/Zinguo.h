@@ -4,7 +4,7 @@
 #ifndef _ZINGUO_h
 #define _ZINGUO_h
 
-#include "arduino.h"
+#include "Arduino.h"
 #include <ESP8266WebServer.h>
 #include <Ticker.h>
 #include "Module.h"

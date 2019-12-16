@@ -3,7 +3,7 @@
 #ifndef _LED_h
 #define _LED_h
 
-#include "arduino.h"
+#include "Arduino.h"
 #include <Ticker.h>
 
 class Led

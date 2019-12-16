@@ -4,7 +4,7 @@
 #ifndef _RADIORECEIVE_h
 #define _RADIORECEIVE_h
 
-#include "arduino.h"
+#include "Arduino.h"
 #include <RCSwitch.h>
 
 class RadioReceive

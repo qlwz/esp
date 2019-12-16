@@ -4,7 +4,7 @@
 #ifndef _WEILE_h
 #define _WEILE_h
 
-#include "arduino.h"
+#include "Arduino.h"
 #include <ESP8266WebServer.h>
 #include "WeileConfig.pb.h"
 #include "Module.h"

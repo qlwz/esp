@@ -58,7 +58,7 @@ void DebugClass::Syslog()
     {
         char syslog_preamble[64]; // Hostname + Id
 
-        snprintf_P(syslog_preamble, sizeof(syslog_preamble), PSTR("%s ESP-"), UID);
+        snprintf_P(syslog_preamble, sizeof(syslog_preamble), PSTR("%s "), UID);
         memmove(tmpData + strlen(syslog_preamble), tmpData, sizeof(tmpData) - strlen(syslog_preamble));
         tmpData[sizeof(tmpData) - 1] = '\0';
         memcpy(tmpData, syslog_preamble, strlen(syslog_preamble));
@@ -76,6 +76,10 @@ void DebugClass::AddLog(uint8_t loglevel)
     if ((1 & globalConfig.debug.type) == 1)
     {
         Serial.printf("%s%s\r\n", mxtime, tmpData);
+    }
+    if ((8 & globalConfig.debug.type) == 8)
+    {
+        Serial1.printf("%s%s\r\n", mxtime, tmpData);
     }
 
     //if (Settings.webserver && (loglevel <= Settings.weblog_level))

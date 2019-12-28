@@ -46,6 +46,45 @@ void Zinguo::loop()
         analysisKey(key);
     }
     dispCtrl(); //刷新数码管、LED灯、74HC595
+
+    if (bitRead(operationFlag, 0))
+    {
+        bitClear(operationFlag, 0);
+        convertTemp();
+    }
+
+#ifndef SkyNet
+    if (bitRead(operationFlag, 1))
+    {
+        bitClear(operationFlag, 1);
+        controlLED &= ~(1 << 2);
+        controlOut &= ~(1 << 2);
+        mqtt->publish(mqtt->getStatTopic("close"), "OFF", globalConfig.mqtt.retain);
+    }
+#endif
+
+    if (bitRead(operationFlag, 2))
+    {
+        bitClear(operationFlag, 2);
+        switchBlowReal(false);
+    }
+
+    if (bitRead(operationFlag, 3))
+    {
+        bitClear(operationFlag, 3);
+        Debug.AddLog(LOG_LEVEL_INFO, "Ventilation Timeout %d %d", ventilationTime, perSecond);
+        ventilationTime = 0;
+        switchVentilation(false);
+    }
+
+    if (bitRead(operationFlag, 4))
+    {
+        bitClear(operationFlag, 4);
+        Debug.AddLog(LOG_LEVEL_INFO, "Warm Timeout %d %d", warmTime, perSecond);
+        warmTime = 0;
+        switchWarm1(false);
+        switchWarm2(false);
+    }
 }
 
 void Zinguo::perSecondDo()
@@ -53,15 +92,13 @@ void Zinguo::perSecondDo()
     if (perSecond % 5 == 0 && !mqttTemp)
     {
         // 每5s读取一次温度值
-        convertTemp();
+        bitSet(operationFlag, 0);
     }
 
 #ifndef SkyNet
     if (bitRead(controlLED, KEY_CLOSE_ALL - 1))
     {
-        controlLED &= ~(1 << 2);
-        controlOut &= ~(1 << 2);
-        mqtt->publish(mqtt->getStatTopic("close"), "OFF");
+        bitSet(operationFlag, 1);
     }
 #endif
 
@@ -72,7 +109,7 @@ void Zinguo::perSecondDo()
         if (closeBlowTime <= 1)
         {
             closeBlowTime = 127;
-            switchBlowReal(false);
+            bitSet(operationFlag, 2);
         }
         else
         {
@@ -82,16 +119,11 @@ void Zinguo::perSecondDo()
 
     if (ventilationTime != 0 && ventilationTime <= perSecond)
     {
-        Debug.AddLog(LOG_LEVEL_INFO, "Ventilation Timeout %d %d", ventilationTime, perSecond);
-        ventilationTime = 0;
-        switchVentilation(false);
+        bitSet(operationFlag, 3);
     }
     if (warmTime != 0 && warmTime <= perSecond)
     {
-        Debug.AddLog(LOG_LEVEL_INFO, "Warm Timeout %d %d", warmTime, perSecond);
-        warmTime = 0;
-        switchWarm1(false);
-        switchWarm2(false);
+        bitSet(operationFlag, 4);
     }
 }
 #pragma endregion
@@ -155,7 +187,7 @@ void Zinguo::mqttCallback(String topicStr, String str)
     {
         mqttTemp = true;
         controlTemp = str.toFloat();
-        mqtt->publish(mqtt->getStatTopic("temp"), str.c_str());
+        mqtt->publish(mqtt->getStatTopic("temp"), str.c_str(), globalConfig.mqtt.retain);
         if (controlTemp >= config.max_temp)
         {
             switchWarm1(false);
@@ -554,7 +586,7 @@ void Zinguo::convertTemp(void)
     if (controlTemp != temp)
     {
         controlTemp = temp; //输出温度值
-        mqtt->publish(mqtt->getStatTopic("temp"), String(temp).c_str());
+        mqtt->publish(mqtt->getStatTopic("temp"), String(temp).c_str(), globalConfig.mqtt.retain);
 
         if (controlTemp >= config.max_temp)
         {
@@ -588,7 +620,7 @@ void Zinguo::switchLight(boolean isOn, bool isBeep)
     {
         beepBeep(1);
     }
-    mqtt->publish(mqtt->getStatTopic("light"), isOn ? "ON" : "OFF");
+    mqtt->publish(mqtt->getStatTopic("light"), isOn ? "ON" : "OFF", globalConfig.mqtt.retain);
 }
 
 // 换气 Key2
@@ -612,7 +644,7 @@ void Zinguo::switchVentilation(boolean isOn, bool isBeep)
                 {
                     beepBeep(2);
                 }
-                mqtt->publish(mqtt->getStatTopic("ventilation"), bitRead(controlOut, KEY_VENTILATION - 1) ? "ON" : "OFF");
+                mqtt->publish(mqtt->getStatTopic("ventilation"), bitRead(controlOut, KEY_VENTILATION - 1) ? "ON" : "OFF", globalConfig.mqtt.retain);
                 return;
             }
             switchBlowReal(false, false); // 单电机要关吹风
@@ -637,7 +669,7 @@ void Zinguo::switchVentilation(boolean isOn, bool isBeep)
     {
         beepBeep(1);
     }
-    mqtt->publish(mqtt->getStatTopic("ventilation"), isOn ? "ON" : "OFF");
+    mqtt->publish(mqtt->getStatTopic("ventilation"), isOn ? "ON" : "OFF", globalConfig.mqtt.retain);
 }
 
 // 取暖1 Key8
@@ -681,7 +713,7 @@ void Zinguo::switchWarm1(boolean isOn, bool isBeep)
     {
         beepBeep(1);
     }
-    mqtt->publish(mqtt->getStatTopic("warm1"), isOn ? "ON" : "OFF");
+    mqtt->publish(mqtt->getStatTopic("warm1"), isOn ? "ON" : "OFF", globalConfig.mqtt.retain);
 }
 
 // 取暖2 Key6
@@ -733,7 +765,7 @@ void Zinguo::switchWarm2(boolean isOn, bool isBeep)
         return;
     }
 
-    mqtt->publish(mqtt->getStatTopic("warm2"), isOn ? "ON" : "OFF");
+    mqtt->publish(mqtt->getStatTopic("warm2"), isOn ? "ON" : "OFF", globalConfig.mqtt.retain);
 }
 
 // 吹风 Key7
@@ -764,7 +796,7 @@ void Zinguo::switchBlowReal(boolean isOn, bool isBeep)
     {
         beepBeep(1);
     }
-    mqtt->publish(mqtt->getStatTopic("blow"), isOn ? "ON" : "OFF");
+    mqtt->publish(mqtt->getStatTopic("blow"), isOn ? "ON" : "OFF", globalConfig.mqtt.retain);
 }
 
 void Zinguo::switchBlow(boolean isOn, bool isBeep)
@@ -812,10 +844,10 @@ void Zinguo::switchCloseAll(boolean isOn, bool isBeep)
         controlOut &= ~(1 << 2);
     }
 #ifdef SkyNet
-    mqtt->publish("cmnd/rsq/POWER", isOn ? "ON" : "OFF");
+    mqtt->publish("cmnd/rsq/POWER", isOn ? "ON" : "OFF", globalConfig.mqtt.retain);
 #else
     dispCtrl();
-    mqtt->publish(mqtt->getStatTopic("close"), isOn ? "ON" : "OFF");
+    mqtt->publish(mqtt->getStatTopic("close"), isOn ? "ON" : "OFF", globalConfig.mqtt.retain);
     switchLight(false, false);
     switchVentilation(false, false);
     switchBlow(false, false);
@@ -827,4 +859,16 @@ void Zinguo::switchCloseAll(boolean isOn, bool isBeep)
         beepBeep(1);
     }
 }
+
+const pb_field_t ZinguoConfigMessage_fields[10] = {
+    PB_FIELD(1, BOOL, SINGULAR, STATIC, FIRST, ZinguoConfigMessage, dual_motor, dual_motor, 0),
+    PB_FIELD(2, BOOL, SINGULAR, STATIC, OTHER, ZinguoConfigMessage, dual_warm, dual_motor, 0),
+    PB_FIELD(3, UINT32, SINGULAR, STATIC, OTHER, ZinguoConfigMessage, delay_blow, dual_warm, 0),
+    PB_FIELD(4, UINT32, SINGULAR, STATIC, OTHER, ZinguoConfigMessage, linkage, delay_blow, 0),
+    PB_FIELD(5, UINT32, SINGULAR, STATIC, OTHER, ZinguoConfigMessage, max_temp, linkage, 0),
+    PB_FIELD(6, UINT32, SINGULAR, STATIC, OTHER, ZinguoConfigMessage, close_warm, max_temp, 0),
+    PB_FIELD(7, UINT32, SINGULAR, STATIC, OTHER, ZinguoConfigMessage, close_ventilation, close_warm, 0),
+    PB_FIELD(8, BOOL, SINGULAR, STATIC, OTHER, ZinguoConfigMessage, beep, close_ventilation, 0),
+    PB_FIELD(9, BOOL, SINGULAR, STATIC, OTHER, ZinguoConfigMessage, reverse_led, beep, 0),
+    PB_LAST_FIELD};
 #endif

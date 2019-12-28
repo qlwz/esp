@@ -25,7 +25,9 @@ class Ntp
 {
 protected:
     static uint32_t utcTime;
+    static uint8_t operationFlag;
     static void breakTime(uint32_t time_input, TIME_T &tm);
+    static void getNtp();
 
 public:
     static String msToHumanString(uint32_t const msecs);
@@ -35,6 +37,7 @@ public:
     static void perSecondDo();
     static TIME_T rtcTime;
     static void init();
+    static void loop();
 };
 
 #endif

@@ -40,7 +40,7 @@ void Weile::loop()
         {
             weiLeStatus = false;
             Debug.AddLog(LOG_LEVEL_INFO, PSTR("Weile close . . ."));
-            mqtt->publish(powerTopic, "OFF");
+            mqtt->publish(powerTopic, "OFF", globalConfig.mqtt.retain);
         }
     }
     if (screenStatus)
@@ -269,7 +269,7 @@ void Weile::weileOpen()
     Debug.AddLog(LOG_LEVEL_INFO, "Open Weile");
     pressBtn();
 
-    mqtt->publish(powerTopic, "ON");
+    mqtt->publish(powerTopic, "ON", globalConfig.mqtt.retain);
 }
 
 void Weile::weileClose()
@@ -283,7 +283,7 @@ void Weile::weileClose()
     Debug.AddLog(LOG_LEVEL_INFO, "Close Weile");
     pressBtn();
 
-    mqtt->publish(powerTopic, "OFF");
+    mqtt->publish(powerTopic, "OFF", globalConfig.mqtt.retain);
 }
 
 /**
@@ -317,4 +317,15 @@ void Weile::pressBtn()
         screenTime = millis();
     }
 }
+
+const pb_field_t WeileConfigMessage_fields[9] = {
+    PB_FIELD(1, UINT32, SINGULAR, STATIC, FIRST, WeileConfigMessage, jog_time, jog_time, 0),
+    PB_FIELD(2, UINT32, SINGULAR, STATIC, OTHER, WeileConfigMessage, start_interval, jog_time, 0),
+    PB_FIELD(3, UINT32, SINGULAR, STATIC, OTHER, WeileConfigMessage, weile_time, start_interval, 0),
+    PB_FIELD(4, UINT32, SINGULAR, STATIC, OTHER, WeileConfigMessage, screen_time, weile_time, 0),
+    PB_FIELD(5, UINT32, SINGULAR, STATIC, OTHER, WeileConfigMessage, close_power, screen_time, 0),
+    PB_FIELD(20, UINT32, SINGULAR, STATIC, OTHER, WeileConfigMessage, pin_rel, close_power, 0),
+    PB_FIELD(21, UINT32, SINGULAR, STATIC, OTHER, WeileConfigMessage, pin_led, pin_rel, 0),
+    PB_FIELD(22, UINT32, SINGULAR, STATIC, OTHER, WeileConfigMessage, pin_btn, pin_led, 0),
+    PB_LAST_FIELD};
 #endif

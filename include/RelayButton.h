@@ -24,8 +24,10 @@ protected:
     unsigned long specialFunctionTimeout = 300;
     int lastTime = 0;
 
+    Relay *relay;
+
 public:
-    void set(uint8_t _ch, uint8_t _io);
+    void init(Relay *_relay, uint8_t _ch, uint8_t _io);
     void loop();
 };
 

@@ -54,9 +54,9 @@ void Mqtt::doReport()
 
 void Mqtt::perSecondDo()
 {
-    if (perSecond % 60 == 0 && mqttClient.connected())
+    if (perSecond % 60 == 0)
     {
-        doReport();
+        bitSet(operationFlag, 0);
     }
 }
 
@@ -84,6 +84,11 @@ void Mqtt::loop()
     else
     {
         mqttClient.loop();
+        if (bitRead(operationFlag, 0))
+        {
+            bitClear(operationFlag, 0);
+            doReport();
+        }
     }
 }
 

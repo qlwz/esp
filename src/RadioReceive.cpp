@@ -7,8 +7,9 @@
 #include "Config.h"
 #include "Led.h"
 
-void RadioReceive::init(uint8_t io)
+void RadioReceive::init(Relay *_relay, uint8_t io)
 {
+    relay = _relay;
     mySwitch = new RCSwitch();
     pinMode(io, INPUT);
     mySwitch->enableReceive(digitalPinToInterrupt(io));
@@ -30,7 +31,6 @@ void RadioReceive::del(uint8_t ch)
 
 void RadioReceive::delAll()
 {
-    Relay *relay = (Relay *)module;
     relay->config.study_index[0] = 0;
     relay->config.study_index[1] = 0;
     relay->config.study_index[2] = 0;
@@ -61,7 +61,6 @@ void RadioReceive::loop()
     lastVaue = value;
     lastTime = millis();
 
-    Relay *relay = (Relay *)module;
     if (studyCH == 0)
     {
         bool isOk = false;

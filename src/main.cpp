@@ -18,8 +18,14 @@
 #include "Zinguo.h"
 #elif defined USE_WEILE
 #include "Weile.h"
+#elif defined USE_XIAOAI
+#include "XiaoAi.h"
 #else
 #error "not support module"
+#endif
+
+#if PB_PROTO_HEADER_VERSION != 30
+#error Regenerate this file with the current version of nanopb generator.
 #endif
 
 void callback(char *topic, byte *payload, unsigned int length)
@@ -83,10 +89,13 @@ void setup()
     module = new Zinguo();
 #elif defined USE_WEILE
     module = new Weile();
+#elif defined USE_XIAOAI
+    globalConfig.debug.type = 8;
+    Serial1.begin(115200);
+    module = new XiaoAi();
 #endif
 
-    Serial.print("\r\n\r\n");
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("---------------------  v%s  %s  -------------------"), VERSION, Ntp::GetBuildDateAndTime().c_str());
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("\r\n\r\n---------------------  v%s  %s  -------------------"), VERSION, Ntp::GetBuildDateAndTime().c_str());
     Config::readConfig();
     if (globalConfig.uid[0] != '\0')
     {
@@ -130,4 +139,5 @@ void loop()
     module->loop();
     Wifi::loop();
     Http::loop();
+    Ntp::loop();
 }

@@ -8,10 +8,11 @@
 #include "Wifi.h"
 #include "Led.h"
 
-void RelayButton::set(uint8_t _ch, uint8_t _io)
+void RelayButton::init(Relay *_relay, uint8_t _ch, uint8_t _io)
 {
     ch = _ch;
     io = _io;
+    relay = _relay;
     pinMode(io, INPUT_PULLUP);
     previousState = digitalRead(io);
     //delay(debounceTime);
@@ -34,7 +35,6 @@ void RelayButton::loop()
             timing = false;
             if (now > lastTime + 300)
             {
-                Relay *relay = (Relay *)module;
                 relay->switchRelay(ch, !relay->lastState[ch], true);
                 lastTime = now;
             }
@@ -51,7 +51,6 @@ void RelayButton::loop()
         Led::led(200);
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("switchCount %d : %d"), ch + 1, switchCount);
 
-        Relay *relay = (Relay *)module;
         if (switchCount == 10 && relay->radioReceive)
         {
             relay->radioReceive->study(ch);

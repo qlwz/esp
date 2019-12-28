@@ -6,7 +6,7 @@
 
 TIME_T Ntp::rtcTime;
 uint32_t Ntp::utcTime;
-
+uint8_t Ntp::operationFlag = 0;
 static const uint8_t kDaysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; // API starts months from 1, this array starts from 0
 static const char kMonthNamesEnglish[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
@@ -156,10 +156,18 @@ void Ntp::breakTime(uint32_t time_input, TIME_T &tm)
     tm.valid = (time_input > 1451602800); // 2016-01-01
 }
 
-void Ntp::perSecondDo()
+void Ntp::loop()
 {
-    bool isAdd = false;
-    if (WiFi.status() == WL_CONNECTED && (utcTime == 0 || perSecond % 600 == 0))
+    if (bitRead(operationFlag, 0))
+    {
+        bitClear(operationFlag, 0);
+        getNtp();
+    }
+}
+
+void Ntp::getNtp()
+{
+    if (WiFi.status() == WL_CONNECTED)
     {
         uint32_t ntp_time = sntp_get_current_timestamp();
         if (ntp_time > 1451602800)
@@ -168,20 +176,17 @@ void Ntp::perSecondDo()
             breakTime(utcTime, rtcTime);
             Debug.AddLog(LOG_LEVEL_INFO, PSTR("NTP: %04d-%02d-%02d %02d:%02d:%02d"), rtcTime.year, rtcTime.month, rtcTime.day_of_month, rtcTime.hour, rtcTime.minute, rtcTime.second);
         }
-        else
-        {
-            isAdd = utcTime > 0;
-            if (utcTime > 0)
-            {
-                Debug.AddLog(LOG_LEVEL_INFO, PSTR("NTP Error"));
-            }
-        }
     }
-    else
+}
+
+void Ntp::perSecondDo()
+{
+    bool isAdd = false;
+    if (utcTime == 0 || perSecond % 600 == 0)
     {
-        isAdd = utcTime > 0;
+        bitSet(operationFlag, 0);
     }
-    if (isAdd)
+    if (utcTime > 0)
     {
         utcTime += 1;
         breakTime(utcTime, rtcTime);

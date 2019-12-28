@@ -40,7 +40,7 @@ void Relay::init()
     if (GPIO_PIN[GPIO_RFRECV] != 99)
     {
         radioReceive = new RadioReceive();
-        radioReceive->init(GPIO_PIN[GPIO_RFRECV]);
+        radioReceive->init(this, GPIO_PIN[GPIO_RFRECV]);
     }
     Relay::channels = 0;
     btns = new RelayButton[4];
@@ -59,7 +59,7 @@ void Relay::init()
         }
         if (GPIO_PIN[GPIO_KEY1 + ch] != 99)
         {
-            btns[ch].set(ch, GPIO_PIN[GPIO_KEY1 + ch]);
+            btns[ch].init(this, ch, GPIO_PIN[GPIO_KEY1 + ch]);
         }
     }
 
@@ -214,6 +214,7 @@ void Relay::httpAdd(ESP8266WebServer *server)
     server->on(F("/relay_do"), std::bind(&Relay::httpDo, this, server));
     server->on(F("/rf_do"), std::bind(&Relay::httpRadioReceive, this, server));
     server->on(F("/relay_setting"), std::bind(&Relay::httpSetting, this, server));
+    server->on(F("/downlight_setting"), std::bind(&Relay::httpDownlightSetting, this, server));
 }
 
 String Relay::httpGetStatus(ESP8266WebServer *server)
@@ -318,22 +319,88 @@ void Relay::httpHtml(ESP8266WebServer *server)
         radioJs.replace(F("{v2}"), String(config.led_end));
         page += F("</td></tr>");
     }
+    page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>设置</button></td></tr>");
+    page += F("</tbody></table></form>");
+
+    /*
+    page += F("<form method='post' action='/downlight_setting' onsubmit='postform(this);return false'>");
+    page += F("<table class='gridtable'><thead><tr><th colspan='2'>三色筒灯</th></tr></thead><tbody>");
+    page += F("<tr><td>指定路数</td><td>");
+    page += F("<label class='bui-radios-label'><input type='radio' name='downlight_ch' value='0'/><i class='bui-radios'></i> 无</label>&nbsp;&nbsp;&nbsp;&nbsp;");
+    for (size_t ch = 0; ch < channels; ch++)
+    {
+        page += F("<label class='bui-radios-label'><input type='radio' name='downlight_ch' value='{ch}'/><i class='bui-radios'></i> {ch}路</label>&nbsp;&nbsp;&nbsp;&nbsp;");
+        page.replace(F("{ch}"), String(ch + 1));
+    }
+    page += F("</td></tr>");
+    radioJs += F("setRadioValue('downlight_ch', '{v}');");
+    radioJs.replace(F("{v}"), String(config.downlight_ch));
+
+    String tmp = "";
+    tmp += F("<option value='1'>白光</option>");
+    tmp += F("<option value='2'>黄光</option>");
+    tmp += F("<option value='3'>黄白光</option>");
+
+    page += F("<tr><td>三色排序</td><td>");
+    page += F("<select id='color1' name='color1'>");
+    page += tmp;
+    page += F("</select>&nbsp;&nbsp;");
+    page += F("<select id='color2' name='color2'>");
+    page += tmp;
+    page += F("</select>&nbsp;&nbsp;");
+    page += F("<select id='color3' name='color3'>");
+    page += tmp;
+    page += F("</select>");
+    page += F("</td></tr>");
+    radioJs += F("id('color1').value={v1};");
+    radioJs += F("id('color2').value={v2};");
+    radioJs += F("id('color3').value={v3};");
+    radioJs.replace(F("{v1}"), String(config.downlight_color[0]));
+    radioJs.replace(F("{v2}"), String(config.downlight_color[1]));
+    radioJs.replace(F("{v3}"), String(config.downlight_color[2]));
+
+    page += F("<tr><td>默认颜色</td><td>");
+    page += F("<select id='default' name='default'>");
+    page += tmp;
+    page += F("</select>");
+    page += F("</td></tr>");
+    radioJs += F("id('default').value={v1};");
+    radioJs.replace(F("{v1}"), String(config.downlight_default));
+
+    page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>设置</button></td></tr>");
+    page += F("</tbody></table></form>");
+    */
+
     if (radioReceive)
     {
-        page += F("<tr><td>清空射频</td><td>");
+        page += F("<table class='gridtable'><thead><tr><th colspan='2'>射频管理</th></tr></thead><tbody>");
+        page += F("<tr><td>学习模式</td><td>");
+        for (size_t ch = 0; ch < channels; ch++)
+        {
+            page += F(" <button type='button' style='width:60px' onclick=\"ajaxPost('/rf_do', 'do=s&c={ch}')\" class='btn-success'>{ch}路</button>");
+            page.replace(F("{ch}"), String(ch + 1));
+        }
+        page += F("</td></tr>");
+
+        page += F("<tr><td>删除模式</td><td>");
+        for (size_t ch = 0; ch < channels; ch++)
+        {
+            page += F(" <button type='button' style='width:60px' onclick=\"ajaxPost('/rf_do', 'do=d&c={ch}')\" class='btn-info'>{ch}路</button>");
+            page.replace(F("{ch}"), String(ch + 1));
+        }
+        page += F("</td></tr>");
+
+        page += F("<tr><td>全部删除</td><td>");
         for (size_t ch = 0; ch < channels; ch++)
         {
             page += F(" <button type='button' style='width:60px' onclick=\"javascript:if(confirm('确定要清空射频遥控？')){ajaxPost('/rf_do', 'do=c&c={ch}');}\" class='btn-danger'>{ch}路</button>");
             page.replace(F("{ch}"), String(ch + 1));
         }
-
         page += F(" <button type='button' style='width:50px' onclick=\"javascript:if(confirm('确定要清空全部射频遥控？')){ajaxPost('/rf_do', 'do=c&c=0');}\" class='btn-danger'>全部</button>");
         page += F("</td></tr>");
+        page += F("</tbody></table>");
     }
 
-    page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>设置</button></td></tr>");
-
-    page += F("</tbody></table></form>");
     radioJs += F("</script>");
 
     server->sendContent(page);
@@ -362,26 +429,69 @@ void Relay::httpDo(ESP8266WebServer *server)
 
 void Relay::httpRadioReceive(ESP8266WebServer *server)
 {
+    if (!radioReceive)
+    {
+        server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"没有射频模块。\"}"));
+        return;
+    }
+    String d = server->arg(F("do"));
     String c = server->arg(F("c"));
-    if (c == F("0"))
-    {
-        config.study_index[0] = 0;
-        config.study_index[1] = 0;
-        config.study_index[2] = 0;
-        config.study_index[3] = 0;
-        Config::saveConfig();
-    }
-    else if (c == F("1") || c == F("2") || c == F("3") || c == F("4"))
-    {
-        config.study_index[c.toInt() - 1] = 0;
-        Config::saveConfig();
-    }
-    else
+    if ((d != F("s") && d != F("d") && d != F("c")) || (c != F("0") && (c.toInt() < 1 || c.toInt() > channels)))
     {
         server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"参数错误。\"}"));
         return;
     }
+    if (d == F("s"))
+    {
+        if (radioReceive->studyCH != 0)
+        {
+            server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"上一个操作未完成\"}"));
+            return;
+        }
+        radioReceive->study(c.toInt() - 1);
+    }
+    else if (d == F("d"))
+    {
+        if (radioReceive->studyCH != 0)
+        {
+            server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"上一个操作未完成\"}"));
+            return;
+        }
+        radioReceive->del(c.toInt() - 1);
+    }
+    else if (d == F("c"))
+    {
+        if (c == F("0"))
+        {
+            radioReceive->delAll();
+        }
+        else
+        {
+            config.study_index[c.toInt() - 1] = 0;
+        }
+    }
+    Config::saveConfig();
     server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"操作成功\"}"));
+}
+
+void Relay::httpDownlightSetting(ESP8266WebServer *server)
+{
+    String color1 = server->arg(F("color1"));
+    String color2 = server->arg(F("color2"));
+    String color3 = server->arg(F("color3"));
+    if (color1 == color2 || color1 == color3 || color2 == color3)
+    {
+        server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"三色排序存在相同\"}"));
+        return;
+    }
+
+    config.downlight_ch = server->arg(F("downlight_ch")).toInt();
+    config.downlight_default = server->arg(F("default")).toInt();
+    config.downlight_color[0] = color1.toInt();
+    config.downlight_color[1] = color2.toInt();
+    config.downlight_color[2] = color3.toInt();
+    Config::saveConfig();
+    server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"已经设置成功。\"}"));
 }
 
 void Relay::httpSetting(ESP8266WebServer *server)
@@ -606,4 +716,23 @@ void Relay::loadModule(uint8_t module)
         j++;
     }
 }
+
+const pb_field_t RelayConfigMessage_fields[16] = {
+    PB_FIELD(1, UINT32, SINGULAR, STATIC, FIRST, RelayConfigMessage, led_type, led_type, 0),
+    PB_FIELD(2, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, led_start, led_type, 0),
+    PB_FIELD(3, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, led_end, led_start, 0),
+    PB_FIELD(4, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, power_on_state, led_end, 0),
+    PB_FIELD(5, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, last_state, power_on_state, 0),
+    PB_REPEATED_FIXED_COUNT(6, UINT32, OTHER, RelayConfigMessage, study_index, last_state, 0),
+    PB_REPEATED_FIXED_COUNT(7, UINT32, OTHER, RelayConfigMessage, study, study_index, 0),
+    PB_FIELD(8, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, led_light, study, 0),
+    PB_FIELD(9, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, led_time, led_light, 0),
+    PB_FIELD(10, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, downlight_ch, led_time, 0),
+    PB_FIELD(11, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, downlight_index, downlight_ch, 0),
+    PB_REPEATED_FIXED_COUNT(12, UINT32, OTHER, RelayConfigMessage, downlight_color, downlight_index, 0),
+    PB_FIELD(13, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, downlight_default, downlight_color, 0),
+    PB_FIELD(14, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, downlight_interval, downlight_default, 0),
+    PB_FIELD(20, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, module_type, downlight_interval, 0),
+    PB_LAST_FIELD};
+
 #endif

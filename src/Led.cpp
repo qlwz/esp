@@ -63,12 +63,11 @@ void Led::loop()
 
 void Led::led(int ms)
 {
-    if (io == 99)
+    if (io != 99)
     {
-        return;
+        digitalWrite(io, light);
+        ledTicker2->once_ms(ms, []() { digitalWrite(io, !light); });
     }
-    digitalWrite(io, light);
-    ledTicker2->once_ms(ms, []() { digitalWrite(io, !light); });
 }
 
 void Led::blinkLED(int duration, int n)

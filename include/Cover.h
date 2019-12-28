@@ -7,7 +7,6 @@
 #include "Arduino.h"
 #include <SoftwareSerial.h>
 #include <ESP8266WebServer.h>
-#include "CoverConfig.pb.h"
 #include "Module.h"
 
 #define MODULE_CFG_VERSION 1501 //1501 - 2000
@@ -28,6 +27,22 @@ const char HASS_DISCOVER_COVER[] PROGMEM =
     "\"qos\":0,"
     "\"ret\":true,"
     "\"opt\":false}";
+
+typedef struct _CoverConfigMessage
+{
+    uint8_t position;
+    uint8_t direction;
+    uint8_t hand_pull;
+    uint8_t weak_switch;
+    uint8_t power_switch;
+    uint8_t pin_rx;
+    uint8_t pin_tx;
+    uint8_t pin_led;
+    uint8_t pin_btn;
+} CoverConfigMessage;
+
+extern const pb_field_t CoverConfigMessage_fields[10];
+#define CoverConfigMessage_size 58
 
 class Cover : public Module
 {

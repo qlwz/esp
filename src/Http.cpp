@@ -130,6 +130,10 @@ void Http::handleRoot()
     page += F("<tr><td>用户名</td><td><input type='text' name='mqtt_username' placeholder='用户名' value='{user}'></td></tr>");
     page += F("<tr><td>密码</td><td><input type='password' name='mqtt_password' placeholder='密码' value='{pass}'></td></tr>");
     page += F("<tr><td>主题</td><td><input type='text' name='mqtt_topic' placeholder='主题' value='{topic}' style='min-width:90%'></td></tr>");
+    page += F("<tr><td>retain</td><td>");
+    page += F("<label class='bui-radios-label'><input type='radio' name='retain' value='0'/><i class='bui-radios'></i> 关闭</label>&nbsp;&nbsp;&nbsp;&nbsp;");
+    page += F("<label class='bui-radios-label'><input type='radio' name='retain' value='1'/><i class='bui-radios'></i> 开启</label><br>除非你知道它是干嘛的。");
+    page += F("</td></tr>");
     page += F("<tr><td>状态</td><td id='mqttconnected'>{mqttconnected}</td></tr>");
     page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>保存</button></td></tr>");
     page += F("</tbody></table></form>");
@@ -138,6 +142,8 @@ void Http::handleRoot()
     page.replace(F("{user}"), globalConfig.mqtt.user);
     page.replace(F("{pass}"), globalConfig.mqtt.pass);
     page.replace(F("{topic}"), globalConfig.mqtt.topic);
+    radioJs += F("setRadioValue('retain', '{v}');");
+    radioJs.replace(F("{v}"), globalConfig.mqtt.retain ? F("1") : F("0"));
     page.replace(F("{mqttconnected}"), (mqtt && mqtt->mqttClient.connected() ? F("已连接") : F("未连接")));
 
     page += F("<form method='post' action='/discovery' onsubmit='postform(this);return false'>");
@@ -169,8 +175,9 @@ void Http::handleRoot()
     page += F("<tr><td>主机名</td><td><input type='text' name='uid' value='{UID}'>&nbsp;具有唯一性，留空默认</td></tr>");
     page += F("<tr><td>日志输出</td><td>");
     page += F("<label class='bui-radios-label'><input type='checkbox' name='log_serial' value='1'/><i class='bui-radios' style='border-radius:20%'></i> Serial</label>&nbsp;&nbsp;&nbsp;&nbsp;");
+    page += F("<label class='bui-radios-label'><input type='checkbox' name='log_serial1' value='1'/><i class='bui-radios' style='border-radius:20%'></i> Serial1</label>&nbsp;&nbsp;&nbsp;&nbsp;");
     page += F("<label class='bui-radios-label'><input type='checkbox' name='log_syslog' value='1'/><i class='bui-radios' style='border-radius:20%'></i> syslog</label>&nbsp;&nbsp;&nbsp;&nbsp;");
-    page += F("<label class='bui-radios-label'><input type='checkbox' name='log_web' value='1'/><i class='bui-radios' style='border-radius:20%'></i> web</label>");
+    page += F("<label class='bui-radios-label'><input type='checkbox' name='log_web' value='1'/><i class='bui-radios' style='border-radius:20%'></i> web</label>&nbsp;&nbsp;&nbsp;&nbsp;");
     page += F("</td></tr>");
     page.replace(F("{UID}"), UID);
     if ((1 & globalConfig.debug.type) == 1)
@@ -184,6 +191,10 @@ void Http::handleRoot()
     if ((4 & globalConfig.debug.type) == 4)
     {
         radioJs += F("setRadioValue('log_web', '1');");
+    }
+    if ((8 & globalConfig.debug.type) == 8)
+    {
+        radioJs += F("setRadioValue('log_serial1', '1');");
     }
 
     page += F("<tr><td>syslog服务器</td><td>");
@@ -278,6 +289,7 @@ void Http::handleMqtt()
     }
     strcpy(globalConfig.mqtt.server, server->arg(F("mqtt_server")).c_str());
     globalConfig.mqtt.port = atoi(server->arg(F("mqtt_port")).c_str());
+    globalConfig.mqtt.retain = server->arg(F("retain")) == F("1");
     strcpy(globalConfig.mqtt.user, server->arg(F("mqtt_username")).c_str());
     strcpy(globalConfig.mqtt.pass, server->arg(F("mqtt_password")).c_str());
     strcpy(globalConfig.mqtt.topic, topic.c_str());
@@ -763,12 +775,16 @@ void Http::handleModuleSetting()
     {
         return;
     }
-    if (Http::server->hasArg(F("log_serial")) || Http::server->hasArg(F("log_syslog")) || Http::server->hasArg(F("log_web")))
+    if (Http::server->hasArg(F("log_serial")) || Http::server->hasArg(F("log_serial1")) || Http::server->hasArg(F("log_syslog")) || Http::server->hasArg(F("log_web")))
     {
         int t = 0;
         if (Http::server->arg(F("log_serial")).equals(F("1")))
         {
             t = t | 1;
+        }
+        if (Http::server->arg(F("log_serial1")).equals(F("1")))
+        {
+            t = t | 8;
         }
         if (Http::server->arg(F("log_web")).equals(F("1")))
         {
@@ -791,6 +807,10 @@ void Http::handleModuleSetting()
             WiFi.hostByName(globalConfig.debug.server, Debug.ip);
         }
 
+        if (Http::server->arg(F("log_serial1")).equals(F("1")))
+        {
+            Serial1.begin(115200);
+        }
         globalConfig.debug.type = t;
     }
     String uid = Http::server->arg(F("uid"));

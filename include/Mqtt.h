@@ -16,6 +16,7 @@ protected:
     String topicCmnd;
     String topicStat;
     String topicTele;
+    uint8_t operationFlag = 0;
 
 public:
     PubSubClient mqttClient;

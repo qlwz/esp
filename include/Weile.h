@@ -6,7 +6,6 @@
 
 #include "Arduino.h"
 #include <ESP8266WebServer.h>
-#include "WeileConfig.pb.h"
 #include "Module.h"
 
 #define MODULE_CFG_VERSION 2501 //2501 - 3000
@@ -20,6 +19,21 @@ const char HASS_DISCOVER_WEILE[] PROGMEM =
     "\"avty_t\":\"%s\","
     "\"pl_avail\":\"online\","
     "\"pl_not_avail\":\"offline\"}";
+
+typedef struct _WeileConfigMessage
+{
+    uint16_t jog_time;
+    uint16_t start_interval;
+    uint16_t weile_time;
+    uint16_t screen_time;
+    uint16_t close_power;
+    uint8_t pin_rel;
+    uint8_t pin_led;
+    uint8_t pin_btn;
+} WeileConfigMessage;
+
+extern const pb_field_t WeileConfigMessage_fields[9];
+#define WeileConfigMessage_size 51
 
 class Weile : public Module
 {

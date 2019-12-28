@@ -7,10 +7,7 @@
 #include "Arduino.h"
 #include <Ticker.h>
 #include <ESP8266WebServer.h>
-#include "RelayConfig.pb.h"
 #include "Module.h"
-#include "RelayButton.h"
-#include "RadioReceive.h"
 
 #define MODULE_CFG_VERSION 1001 //1001 - 1500
 #define MAX_GPIO_PIN 17         // Number of supported GPIO
@@ -26,6 +23,30 @@ const char HASS_DISCOVER_RELAY[] PROGMEM =
     "\"pl_avail\":\"online\","
     "\"pl_not_avail\":\"offline\"}";
 
+typedef struct _RelayConfigMessage
+{
+    uint8_t led_type;
+    uint16_t led_start;
+    uint16_t led_end;
+    uint8_t power_on_state;
+    uint8_t last_state;
+    uint32_t study_index[4];
+    uint32_t study[40];
+    uint8_t led_light;
+    uint8_t led_time;
+    uint8_t downlight_ch;
+    uint8_t downlight_index;
+    uint8_t downlight_color[3];
+    uint8_t downlight_default;
+    uint16_t downlight_interval;
+    uint8_t module_type;
+} RelayConfigMessage;
+
+extern const pb_field_t RelayConfigMessage_fields[16];
+#define RelayConfigMessage_size 355
+
+class RadioReceive;
+class RelayButton;
 class Relay : public Module
 {
 private:
@@ -48,6 +69,7 @@ private:
     void httpDo(ESP8266WebServer *server);
     void httpRadioReceive(ESP8266WebServer *server);
     void httpSetting(ESP8266WebServer *server);
+    void httpDownlightSetting(ESP8266WebServer *server);
 
     void loadModule(uint8_t module);
 

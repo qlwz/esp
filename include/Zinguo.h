@@ -8,7 +8,6 @@
 #include <ESP8266WebServer.h>
 #include <Ticker.h>
 #include "Module.h"
-#include "ZinguoConfig.pb.h"
 
 #define MODULE_CFG_VERSION 2001 //2001 - 2500
 
@@ -44,6 +43,22 @@ const char HASS_DISCOVER_ZINGUO[] PROGMEM =
     "\"pl_avail\":\"online\","
     "\"pl_not_avail\":\"offline\"}";
 
+typedef struct _ZinguoConfigMessage
+{
+    bool dual_motor;
+    bool dual_warm;
+    uint8_t delay_blow;
+    uint8_t linkage;
+    uint8_t max_temp;
+    uint8_t close_warm;
+    uint8_t close_ventilation;
+    bool beep;
+    bool reverse_led;
+} ZinguoConfigMessage;
+
+extern const pb_field_t ZinguoConfigMessage_fields[10];
+#define ZinguoConfigMessage_size 38
+
 class Zinguo : public Module
 {
 private:
@@ -69,6 +84,8 @@ private:
     unsigned int ventilationTime = 0;
     // Mqtt传温度
     boolean mqttTemp = false;
+    
+    uint8_t operationFlag = 0;
 
     Ticker *schTicker;
     void beepBeep(char i);

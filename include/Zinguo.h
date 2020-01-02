@@ -66,6 +66,13 @@ private:
     //数码管0~9,Fix For New
     const unsigned char DigitNUM[10] = {0x81, 0x9F, 0xA2, 0x92, 0x9C, 0xD0, 0xC0, 0x9B, 0x80, 0x90};
 
+    // 按键
+    int buttonDebounceTime = 50;
+    int buttonLongPressTime = 5000; // 2000 = 2s
+    boolean buttonTiming = false;
+    unsigned long buttonTimingStart = 0;
+    int buttonAction = 0; // 0 = 没有要执行的动作, 1 = 执行短按动作, 2 = 执行长按动作
+
     // 定义2个字节的Key缓存
     unsigned short touchKey = 0x0000;
     // 控制缓冲区 0温度
@@ -84,7 +91,7 @@ private:
     unsigned int ventilationTime = 0;
     // Mqtt传温度
     boolean mqttTemp = false;
-    
+
     uint8_t operationFlag = 0;
 
     Ticker *schTicker;

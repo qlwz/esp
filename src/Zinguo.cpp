@@ -3,6 +3,7 @@
 #include "Debug.h"
 #include "Zinguo.h"
 #include "Mqtt.h"
+#include "Wifi.h"
 
 #pragma region 继承
 
@@ -39,11 +40,40 @@ void Zinguo::loop()
 {
     dispCtrl();
     unsigned short key = getKey(); //获取键值
-    if (touchKey != key)           //如果前后按键不相等，则处理按键值
+    if (key != 0x00)
     {
-        Debug.AddLog(LOG_LEVEL_INFO, "TouchKey: 0x%0X", key);
-        touchKey = key; //缓冲当前按键键值
-        analysisKey(key);
+        if (buttonTiming == false)
+        {
+            buttonTiming = true;
+            buttonTimingStart = millis();
+        }
+        else
+        {
+            if (touchKey != key) //如果前后按键不相等，则处理按键值
+            {
+                if (millis() >= (buttonTimingStart + buttonDebounceTime))
+                {
+                    Debug.AddLog(LOG_LEVEL_INFO, "TouchKey: 0x%0X", key);
+                    touchKey = key; //缓冲当前按键键值
+                    analysisKey(touchKey);
+                }
+            }
+
+            if (millis() >= (buttonTimingStart + buttonLongPressTime))
+            {
+                buttonAction = 2;
+            }
+        }
+    }
+    else
+    {
+        buttonTiming = false;
+        if (buttonAction == 2 && touchKey == 0x1000) // 执行长按动作
+        {
+            Wifi::setupWifiManager(false);
+        }
+        touchKey = key;
+        buttonAction = 0;
     }
     dispCtrl(); //刷新数码管、LED灯、74HC595
 

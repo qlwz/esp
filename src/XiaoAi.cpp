@@ -50,8 +50,9 @@ void XiaoAi::loop()
     if (bitRead(operationFlag, 2))
     {
         bitClear(operationFlag, 2);
-        Serial.println("test `ps|grep 'sh /data/mico.sh'|grep -v grep|wc -l` -eq 0 && sh /data/mico.sh > /tmp/mico.log 2>&1 &");
+        Serial.println("test `ps|grep '/data/xiaoaimqtt'|grep -v grep|wc -l` -eq 0 && /data/xiaoaimqtt > /tmp/mico.log 2>&1 &");
     }
+    /*
     if (bitRead(operationFlag, 3))
     {
         bitClear(operationFlag, 3);
@@ -67,6 +68,7 @@ void XiaoAi::loop()
         bitClear(operationFlag, 5);
         Serial.println("echo 'mqtt:volume:'$(mphelper volume_get)");
     }
+    */
 }
 
 void XiaoAi::perSecondDo()
@@ -75,11 +77,11 @@ void XiaoAi::perSecondDo()
     {
         Serial.println();
     }
+    /*
     if (perSecond % 5 == 0)
     {
         bitSet(operationFlag, 3);
     }
-    /*
     if (perSecond % 6 == 0)
     {
         bitSet(operationFlag, 4);
@@ -183,6 +185,7 @@ void XiaoAi::saveConfig()
 
 void XiaoAi::mqttCallback(String topicStr, String str)
 {
+    /*
     if (topicStr.endsWith("/tts"))
     {
         Serial.println("ubus call mibrain text_to_speech \"{\\\"text\\\":\\\"" + str + "\\\",\\\"save\\\":0}\" > /dev/null");
@@ -226,6 +229,7 @@ void XiaoAi::mqttCallback(String topicStr, String str)
         delay(100);
         Serial.println("echo 'mqtt:context:'$(ubus call mediaplayer player_get_context)");
     }
+    */
 }
 
 void XiaoAi::mqttDiscovery(boolean isEnable)
@@ -322,8 +326,9 @@ void XiaoAi::serialEvent()
         if (!isLogin && (str.indexOf("root@mico:~#") > 0 || str.indexOf("root@mico:/") > 0))
         {
             isLogin = true;
-            bitSet(operationFlag, 2);
+            //bitSet(operationFlag, 2);
         }
+        /*
         if (str.indexOf("mqtt:volume:") > 0)
         {
             char *p;
@@ -393,6 +398,7 @@ void XiaoAi::serialEvent()
                 p = strtok(NULL, "\n");
             }
         }
+        */
     }
 }
 

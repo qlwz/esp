@@ -21,7 +21,7 @@
 //#define MQTT_PASS "" // MQTT 密码
 
 #define MQTT_FULLTOPIC "%module%/%hostname%/%prefix%/" // MQTT 主题格式
-#define VERSION "2020.01.02.2130"                      // 版本
+#define VERSION "2020.01.02.2300"                      // 版本
 
 #define MAX_STUDY_RECEIVER_NUM 10 // 遥控最大学习数
 

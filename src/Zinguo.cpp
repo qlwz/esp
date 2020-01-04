@@ -732,6 +732,10 @@ void Zinguo::switchWarm1(boolean isOn, bool isBeep)
         if ((config.linkage == 1 && !bitRead(controlOut, KEY_WARM_2 - 1)) || config.linkage == 2)
         {
             closeBlowTime = config.delay_blow;
+            if (closeBlowTime == 127)
+            {
+                switchBlow(false);
+            }
         }
         if (!bitRead(controlOut, KEY_WARM_2 - 1))
         {
@@ -776,6 +780,10 @@ void Zinguo::switchWarm2(boolean isOn, bool isBeep)
         if ((config.linkage == 1 && !bitRead(controlOut, KEY_WARM_1 - 1)) || config.linkage == 3)
         {
             closeBlowTime = config.delay_blow;
+            if (closeBlowTime == 127)
+            {
+                switchBlow(false);
+            }
         }
         if (!bitRead(controlOut, KEY_WARM_1 - 1))
         {

@@ -23,8 +23,7 @@ const char HASS_DISCOVER_RELAY[] PROGMEM =
     "\"pl_avail\":\"online\","
     "\"pl_not_avail\":\"offline\"}";
 
-typedef struct _RelayConfigMessage
-{
+typedef struct _RelayConfigMessage {
     uint8_t led_type;
     uint16_t led_start;
     uint16_t led_end;
@@ -39,11 +38,12 @@ typedef struct _RelayConfigMessage
     uint8_t downlight_color[3];
     uint8_t downlight_default;
     uint16_t downlight_interval;
+    uint8_t power_mode;
     uint8_t module_type;
 } RelayConfigMessage;
 
-extern const pb_field_t RelayConfigMessage_fields[16];
-#define RelayConfigMessage_size 355
+extern const pb_field_t RelayConfigMessage_fields[17];
+#define RelayConfigMessage_size 361
 
 class RadioReceive;
 class RelayButton;

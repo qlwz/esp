@@ -276,6 +276,13 @@ void Relay::httpHtml(ESP8266WebServer *server)
     radioJs += F("setRadioValue('power_on_state', '{v}');");
     radioJs.replace(F("{v}"), String(config.power_on_state));
 
+    page += F("<tr><td>开关模式</td><td>");
+    page += F("<label class='bui-radios-label'><input type='radio' name='power_mode' value='0'/><i class='bui-radios'></i> 自锁</label>&nbsp;&nbsp;&nbsp;&nbsp;");
+    page += F("<label class='bui-radios-label'><input type='radio' name='power_mode' value='1'/><i class='bui-radios'></i> 互锁</label>");
+    page += F("</td></tr>");
+    radioJs += F("setRadioValue('power_mode', '{v}');");
+    radioJs.replace(F("{v}"), String(config.power_mode));
+
     if (GPIO_PIN[GPIO_LED1] != 99)
     {
         page += F("<tr><td>面板指示灯</td><td>");
@@ -498,11 +505,12 @@ void Relay::httpSetting(ESP8266WebServer *server)
 {
     if (server->hasArg(F("power_on_state")))
     {
-        String powerOnState = server->arg(F("power_on_state"));
-        if (powerOnState != F("0") || powerOnState != F("1") || powerOnState != F("2") || powerOnState != F("3"))
-        {
-            config.power_on_state = powerOnState.toInt();
-        }
+        config.power_on_state = server->arg(F("power_on_state")).toInt();
+    }
+
+    if (server->hasArg(F("power_mode")))
+    {
+        config.power_mode = server->arg(F("power_mode")).toInt();
     }
 
     if (server->hasArg(F("led_type")))
@@ -678,6 +686,17 @@ void Relay::switchRelay(uint8_t ch, bool isOn, bool isSave)
     }
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("Relay %d . . . %s"), ch + 1, isOn ? "ON" : "OFF");
 
+    if (isOn && config.power_mode == 1)
+    {
+        for (size_t ch2 = 0; ch2 < channels; ch2++)
+        {
+            if (ch2 != ch && lastState[ch2])
+            {
+                switchRelay(ch2, false, isSave);
+            }
+        }
+    }
+
     lastState[ch] = isOn;
     digitalWrite(GPIO_PIN[GPIO_REL1 + ch], isOn ? HIGH : LOW);
 
@@ -717,7 +736,7 @@ void Relay::loadModule(uint8_t module)
     }
 }
 
-const pb_field_t RelayConfigMessage_fields[16] = {
+const pb_field_t RelayConfigMessage_fields[17] = {
     PB_FIELD(1, UINT32, SINGULAR, STATIC, FIRST, RelayConfigMessage, led_type, led_type, 0),
     PB_FIELD(2, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, led_start, led_type, 0),
     PB_FIELD(3, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, led_end, led_start, 0),
@@ -732,7 +751,8 @@ const pb_field_t RelayConfigMessage_fields[16] = {
     PB_REPEATED_FIXED_COUNT(12, UINT32, OTHER, RelayConfigMessage, downlight_color, downlight_index, 0),
     PB_FIELD(13, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, downlight_default, downlight_color, 0),
     PB_FIELD(14, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, downlight_interval, downlight_default, 0),
-    PB_FIELD(20, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, module_type, downlight_interval, 0),
+    PB_FIELD(19, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, power_mode, downlight_interval, 0),
+    PB_FIELD(20, UINT32, SINGULAR, STATIC, OTHER, RelayConfigMessage, module_type, power_mode, 0),
     PB_LAST_FIELD};
 
 #endif

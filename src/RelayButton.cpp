@@ -14,39 +14,40 @@ void RelayButton::init(Relay *_relay, uint8_t _ch, uint8_t _io)
     io = _io;
     relay = _relay;
     pinMode(io, INPUT_PULLUP);
-    previousState = digitalRead(io);
-    //delay(debounceTime);
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("load button ch%d io%d"), ch + 1, io);
+    if (digitalRead(io))
+    {
+        setStateFlag(DEBOUNCED_STATE | UNSTABLE_STATE);
+    }
 }
 
 void RelayButton::loop()
 {
-    now = millis(); // 计时器计时
-    state = digitalRead(io);
-    if (state != previousState)
+    currentState = digitalRead(io);
+    if (currentState != getStateFlag(UNSTABLE_STATE))
     {
-        if (timing == false)
+        timingStart = millis();
+        toggleStateFlag(UNSTABLE_STATE);
+    }
+    else if (millis() - timingStart >= debounceTime)
+    {
+        if (currentState != getStateFlag(DEBOUNCED_STATE))
         {
-            timing = true;
-            timingStart = now;
-        }
-        else if (now >= (timingStart + debounceTime))
-        {
-            timing = false;
-            if (now > lastTime + 300)
+            timingStart = millis();
+            setStateFlag(DEBOUNCED_STATE);
+
+            switchCount += 1;
+            intervalStart = millis();
+
+            if (millis() > lastTime + 300)
             {
                 relay->switchRelay(ch, !relay->lastState[ch], true);
-                lastTime = now;
+                lastTime = millis();
             }
-            // 计算结果并报告
-            previousState = state;
-            intervalStart = now;
-            switchCount += 1;
         }
     }
 
     // 如果经过的时间大于超时并且计数大于0，则填充并重置计数
-    if (switchCount > 0 && (now - intervalStart) > specialFunctionTimeout)
+    if (switchCount > 0 && (millis() - intervalStart) > specialFunctionTimeout)
     {
         Led::led(200);
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("switchCount %d : %d"), ch + 1, switchCount);

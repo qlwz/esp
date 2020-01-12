@@ -33,7 +33,7 @@ void RelayButton::loop()
         if (currentState != getStateFlag(DEBOUNCED_STATE))
         {
             timingStart = millis();
-            setStateFlag(DEBOUNCED_STATE);
+            toggleStateFlag(DEBOUNCED_STATE);
 
             switchCount += 1;
             intervalStart = millis();

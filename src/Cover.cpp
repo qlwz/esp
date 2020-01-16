@@ -246,11 +246,11 @@ void Cover::mqttDiscovery(boolean isEnable)
         sprintf(message, HASS_DISCOVER_COVER, UID, mqtt->getCmndTopic(F("set")).c_str(), mqtt->getStatTopic(F("position")).c_str(),
                 mqtt->getCmndTopic(F("set_position")).c_str(), mqtt->getTeleTopic(F("availability")).c_str());
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("discovery: %s - %s"), topic, message);
-        mqtt->publish(topic, message);
+        mqtt->publish(topic, message, true);
     }
     else
     {
-        mqtt->publish(topic, "");
+        mqtt->publish(topic, "", true);
     }
 }
 

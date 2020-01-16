@@ -174,11 +174,11 @@ void Weile::mqttDiscovery(boolean isEnable)
                 powerTopic.c_str(),
                 mqtt->getTeleTopic(F("availability")).c_str());
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("discovery: %s - %s"), topic, message);
-        mqtt->publish(topic, message);
+        mqtt->publish(topic, message, true);
     }
     else
     {
-        mqtt->publish(topic, "");
+        mqtt->publish(topic, "", true);
     }
 }
 

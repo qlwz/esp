@@ -197,11 +197,11 @@ void Relay::mqttDiscovery(boolean isEnable)
                     Relay::channels == 1 ? powerTopic.c_str() : (powerTopic + (ch + 1)).c_str(),
                     mqtt->getTeleTopic(F("availability")).c_str());
             Debug.AddLog(LOG_LEVEL_INFO, PSTR("discovery: %s - %s"), topic, message);
-            mqtt->publish(topic, message);
+            mqtt->publish(topic, message, true);
         }
         else
         {
-            mqtt->publish(topic, "");
+            mqtt->publish(topic, "", true);
         }
     }
 }

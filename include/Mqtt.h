@@ -17,6 +17,7 @@ protected:
     String topicStat;
     String topicTele;
     uint8_t operationFlag = 0;
+    void doReportHeartbeat();
 
 public:
     PubSubClient mqttClient;
@@ -26,7 +27,7 @@ public:
     const uint32_t kMqttReconnectTime = 30000; // 重新连接尝试之间的延迟（ms）
 
     bool mqttConnect();
-    void doReport();
+    void availability();
     void loop();
     void mqttSetLoopCallback(MQTT_CALLBACK_SIGNATURE);
     void mqttSetConnectedCallback(void (*func)(void));

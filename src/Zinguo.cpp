@@ -231,7 +231,7 @@ void Zinguo::mqttConnected()
     if (globalConfig.mqtt.discovery)
     {
         mqttDiscovery(true);
-        mqtt->doReport();
+        mqtt->availability();
     }
 }
 

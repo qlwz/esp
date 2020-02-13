@@ -244,7 +244,7 @@ const pb_field_t HttpConfigMessage_fields[5] = {
     PB_FIELD(4, STRING, SINGULAR, STATIC, OTHER, HttpConfigMessage, ota_url, pass, 0),
     PB_LAST_FIELD};
 
-const pb_field_t MqttConfigMessage_fields[9] = {
+const pb_field_t MqttConfigMessage_fields[10] = {
     PB_FIELD(1, STRING, SINGULAR, STATIC, FIRST, MqttConfigMessage, server, server, 0),
     PB_FIELD(2, UINT32, SINGULAR, STATIC, OTHER, MqttConfigMessage, port, server, 0),
     PB_FIELD(3, STRING, SINGULAR, STATIC, OTHER, MqttConfigMessage, user, port, 0),
@@ -253,6 +253,7 @@ const pb_field_t MqttConfigMessage_fields[9] = {
     PB_FIELD(6, STRING, SINGULAR, STATIC, OTHER, MqttConfigMessage, topic, retain, 0),
     PB_FIELD(7, BOOL, SINGULAR, STATIC, OTHER, MqttConfigMessage, discovery, topic, 0),
     PB_FIELD(8, STRING, SINGULAR, STATIC, OTHER, MqttConfigMessage, discovery_prefix, discovery, 0),
+    PB_FIELD(9, UINT32, SINGULAR, STATIC, OTHER, MqttConfigMessage, interval, discovery_prefix, 0),
     PB_LAST_FIELD};
 
 const pb_field_t DebugConfigMessage_fields[4] = {

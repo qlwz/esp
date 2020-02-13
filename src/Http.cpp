@@ -130,6 +130,7 @@ void Http::handleRoot()
     page += F("<tr><td>用户名</td><td><input type='text' name='mqtt_username' placeholder='用户名' value='{user}'></td></tr>");
     page += F("<tr><td>密码</td><td><input type='password' name='mqtt_password' placeholder='密码' value='{pass}'></td></tr>");
     page += F("<tr><td>主题</td><td><input type='text' name='mqtt_topic' placeholder='主题' value='{topic}' style='min-width:90%'></td></tr>");
+    page += F("<tr><td>心跳上报间隔</td><td><input type='number' min='1' max='65535' name='interval' required value='{interval}'>&nbsp;秒&nbsp;&nbsp;0为不上报</td></tr>");
     page += F("<tr><td>retain</td><td>");
     page += F("<label class='bui-radios-label'><input type='radio' name='retain' value='0'/><i class='bui-radios'></i> 关闭</label>&nbsp;&nbsp;&nbsp;&nbsp;");
     page += F("<label class='bui-radios-label'><input type='radio' name='retain' value='1'/><i class='bui-radios'></i> 开启</label><br>除非你知道它是干嘛的。");
@@ -142,6 +143,7 @@ void Http::handleRoot()
     page.replace(F("{user}"), globalConfig.mqtt.user);
     page.replace(F("{pass}"), globalConfig.mqtt.pass);
     page.replace(F("{topic}"), globalConfig.mqtt.topic);
+    page.replace(F("{interval}"), String(globalConfig.mqtt.interval));
     radioJs += F("setRadioValue('retain', '{v}');");
     radioJs.replace(F("{v}"), globalConfig.mqtt.retain ? F("1") : F("0"));
     page.replace(F("{mqttconnected}"), (mqtt && mqtt->mqttClient.connected() ? F("已连接") : F("未连接")));
@@ -288,11 +290,12 @@ void Http::handleMqtt()
         return;
     }
     strcpy(globalConfig.mqtt.server, server->arg(F("mqtt_server")).c_str());
-    globalConfig.mqtt.port = atoi(server->arg(F("mqtt_port")).c_str());
+    globalConfig.mqtt.port = server->arg(F("mqtt_port")).toInt();
     globalConfig.mqtt.retain = server->arg(F("retain")) == F("1");
     strcpy(globalConfig.mqtt.user, server->arg(F("mqtt_username")).c_str());
     strcpy(globalConfig.mqtt.pass, server->arg(F("mqtt_password")).c_str());
     strcpy(globalConfig.mqtt.topic, topic.c_str());
+    globalConfig.mqtt.interval = server->arg(F("interval")).toInt();
     Config::saveConfig();
     mqtt->setTopic();
 

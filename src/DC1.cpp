@@ -163,7 +163,7 @@ void DC1::mqttConnected()
     if (globalConfig.mqtt.discovery)
     {
         mqttDiscovery(true);
-        mqtt->doReport();
+        mqtt->availability();
     }
 
     // 连接MQTT成功重新发送状态
@@ -479,7 +479,7 @@ void DC1::switchRelay(uint8_t ch, bool isOn, bool isSave)
 
 void DC1::updataCSE7766()
 {
-    bool send = (perSecond % config.cse7766_interval) == 0;
+    bool send = config.cse7766_interval > 0 && (perSecond % config.cse7766_interval) == 0;
     cse7766->update();
 
     if (send || fabs(cse7766->voltage - lastVoltage) > config.voltage_delta || fabs(cse7766->current - lastCurrent) > config.current_delta || fabs(cse7766->power - lastPower) > config.power_delta)

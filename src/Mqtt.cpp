@@ -41,23 +41,23 @@ bool Mqtt::mqttConnect()
     return mqttClient.connected();
 }
 
-void Mqtt::doReport()
+void Mqtt::doReportHeartbeat()
 {
     char message[250];
     sprintf(message, "{\"UID\":\"%s\",\"SSID\":\"%s\",\"RSSI\":\"%s\",\"Version\":\"%s\",\"ip\":\"%s\",\"mac\":\"%s\",\"freeMem\":%d,\"uptime\":%d}",
             UID, WiFi.SSID().c_str(), String(WiFi.RSSI()).c_str(), VERSION, WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), ESP.getFreeHeap(), millis() / 1000);
     //Debug.AddLog(LOG_LEVEL_INFO, PSTR("%s"), message);
     publish(getTeleTopic(F("HEARTBEAT")), message);
+}
 
+void Mqtt::availability()
+{
     publish(getTeleTopic(F("availability")), "online", false);
 }
 
 void Mqtt::perSecondDo()
 {
-    if (perSecond % 60 == 0)
-    {
-        bitSet(operationFlag, 0);
-    }
+    bitSet(operationFlag, 0);
 }
 
 void Mqtt::loop()
@@ -77,7 +77,11 @@ void Mqtt::loop()
             {
                 lastReconnectAttempt = 0;
                 Debug.AddLog(LOG_LEVEL_INFO, PSTR("successful client mqtt connection"));
-                doReport();
+                availability();
+                if (globalConfig.mqtt.interval > 0)
+                {
+                    doReportHeartbeat();
+                }
             }
         }
     }
@@ -87,7 +91,14 @@ void Mqtt::loop()
         if (bitRead(operationFlag, 0))
         {
             bitClear(operationFlag, 0);
-            doReport();
+            if (globalConfig.mqtt.interval > 0 && (perSecond % globalConfig.mqtt.interval) == 0)
+            {
+                doReportHeartbeat();
+            }
+            if (perSecond % 309 == 0)
+            {
+                availability();
+            }
         }
     }
 }

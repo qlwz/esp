@@ -259,7 +259,7 @@ void Cover::mqttConnected()
     if (globalConfig.mqtt.discovery)
     {
         mqttDiscovery(true);
-        mqtt->doReport();
+        mqtt->availability();
     }
     getPositionTask();
 }

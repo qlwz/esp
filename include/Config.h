@@ -59,6 +59,7 @@ typedef struct _MqttConfigMessage
     char topic[50];
     bool discovery;
     char discovery_prefix[30];
+    uint16_t interval;
 } MqttConfigMessage;
 
 typedef struct _WifiConfigMessage
@@ -87,10 +88,10 @@ typedef struct _GlobalConfigMessage
 extern const pb_field_t GlobalConfigMessage_fields[9];
 extern const pb_field_t WifiConfigMessage_fields[7];
 extern const pb_field_t HttpConfigMessage_fields[5];
-extern const pb_field_t MqttConfigMessage_fields[9];
+extern const pb_field_t MqttConfigMessage_fields[10];
 extern const pb_field_t DebugConfigMessage_fields[4];
 
-#define GlobalConfigMessage_size 1081
+#define GlobalConfigMessage_size 1087
 
 extern Module *module;
 

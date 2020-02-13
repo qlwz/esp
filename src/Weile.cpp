@@ -188,7 +188,7 @@ void Weile::mqttConnected()
     if (globalConfig.mqtt.discovery)
     {
         mqttDiscovery(true);
-        mqtt->doReport();
+        mqtt->availability();
     }
 }
 #pragma endregion

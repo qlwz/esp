@@ -40,6 +40,7 @@ message MqttConfigMessage {
 	string topic = 6 [(nanopb).max_size = 50];
 	bool discovery = 7;
 	string discovery_prefix = 8 [(nanopb).max_size = 30];
+    uint32 interval = 9 [(nanopb).int_size = IS_16];
 }
 
 message DebugConfigMessage {

@@ -178,7 +178,7 @@ void Relay::mqttConnected()
     if (globalConfig.mqtt.discovery)
     {
         mqttDiscovery(true);
-        mqtt->doReport();
+        mqtt->availability();
     }
 
     // 连接MQTT成功重新发送状态

@@ -127,7 +127,6 @@ void DC1::resetConfig()
     config.voltage_delta = 3;
     config.current_delta = 0.5;
     config.power_delta = 5;
-    config.energy_merge = 1;
 }
 
 void DC1::saveConfig()
@@ -205,34 +204,18 @@ void DC1::mqttDiscovery(boolean isEnable)
         sprintf(topic, "%s/sensor/%s_%s/config", globalConfig.mqtt.discovery_prefix, UID, tims[i].c_str());
         if (isEnable)
         {
-            if (config.energy_merge)
-            {
-                sprintf(message, "{\"name\":\"%s_%s\","
-                                 "\"stat_t\":\"%s\","
-                                 "\"unit_of_meas\":\"%s\","
-                                 "\"val_tpl\":\"{{value_json.%s}}\","
-                                 "\"avty_t\":\"%s\","
-                                 "\"pl_avail\":\"online\","
-                                 "\"pl_not_avail\":\"offline\"}",
-                        UID, tims[i].c_str(),
-                        mqtt->getTeleTopic("ENERGY").c_str(),
-                        tims2[i].c_str(),
-                        tims[i].c_str(),
-                        mqtt->getTeleTopic(F("availability")).c_str());
-            }
-            else
-            {
-                sprintf(message, "{\"name\":\"%s_%s\","
-                                 "\"stat_t\":\"%s\","
-                                 "\"unit_of_meas\":\"%s\","
-                                 "\"avty_t\":\"%s\","
-                                 "\"pl_avail\":\"online\","
-                                 "\"pl_not_avail\":\"offline\"}",
-                        UID, tims[i].c_str(),
-                        mqtt->getStatTopic(tims[i].c_str()).c_str(),
-                        tims2[i].c_str(),
-                        mqtt->getTeleTopic(F("availability")).c_str());
-            }
+            sprintf(message, "{\"name\":\"%s_%s\","
+                             "\"stat_t\":\"%s\","
+                             "\"unit_of_meas\":\"%s\","
+                             "\"val_tpl\":\"{{value_json.%s}}\","
+                             "\"avty_t\":\"%s\","
+                             "\"pl_avail\":\"online\","
+                             "\"pl_not_avail\":\"offline\"}",
+                    UID, tims[i].c_str(),
+                    mqtt->getTeleTopic("ENERGY").c_str(),
+                    tims2[i].c_str(),
+                    tims[i].c_str(),
+                    mqtt->getTeleTopic(F("availability")).c_str());
             Debug.AddLog(LOG_LEVEL_INFO, PSTR("discovery: %s - %s"), topic, message);
             mqtt->publish(topic, message, true);
         }
@@ -350,13 +333,6 @@ void DC1::httpHtml(ESP8266WebServer *server)
     page += F("<tr><td>功率波动</td><td><input type='number' min='1' step='0.1' max='250' name='power_delta' required value='{v}'>&nbsp;W</td></tr>");
     page.replace(F("{v}"), String(config.power_delta));
 
-    page += F("<tr><td>电力合并</td><td>");
-    page += F("<label class='bui-radios-label'><input type='radio' name='energy_merge' value='0'/><i class='bui-radios'></i> 不合并</label>&nbsp;&nbsp;&nbsp;&nbsp;");
-    page += F("<label class='bui-radios-label'><input type='radio' name='energy_merge' value='1'/><i class='bui-radios'></i> 合并</label><br>合并后一条MQTT发送3个数据");
-    page += F("</td></tr>");
-    radioJs += F("setRadioValue('energy_merge', '{v}');");
-    radioJs.replace(F("{v}"), String(config.energy_merge));
-
     page += F("<tr><td colspan='2'><button type='submit' class='btn-info'>设置</button></td></tr>");
     page += F("</tbody></table></form>");
     radioJs += F("</script>");
@@ -397,16 +373,6 @@ void DC1::httpSetting(ESP8266WebServer *server)
     config.voltage_delta = server->arg(F("voltage_delta")).toFloat();
     config.current_delta = server->arg(F("current_delta")).toFloat();
     config.power_delta = server->arg(F("power_delta")).toFloat();
-    uint8_t energy_merge = server->arg(F("energy_merge")).toInt();
-
-    if (energy_merge != config.energy_merge)
-    {
-        config.energy_merge = energy_merge;
-        if (globalConfig.mqtt.discovery)
-        {
-            mqttDiscovery(true);
-        }
-    }
 
     logoLed();
 
@@ -515,35 +481,15 @@ void DC1::updataCSE7766()
 {
     bool send = (perSecond % config.cse7766_interval) == 0;
     cse7766->update();
-    if (config.energy_merge)
-    {
-        if (send || fabs(cse7766->voltage - lastVoltage) > config.voltage_delta || fabs(cse7766->current - lastCurrent) > config.current_delta || fabs(cse7766->power - lastPower) > config.power_delta)
-        {
-            lastVoltage = cse7766->voltage;
-            lastCurrent = cse7766->current;
-            lastPower = cse7766->power;
 
-            sprintf(tmpData, "{\"voltage\":%s,\"current\":%s,\"power\":%s,\"factor\":%s}", String(lastVoltage).c_str(), String(lastCurrent).c_str(), String(lastPower).c_str(), String(cse7766->factor).c_str());
-            mqtt->publish(mqtt->getTeleTopic("ENERGY"), tmpData, globalConfig.mqtt.retain);
-        }
-    }
-    else
+    if (send || fabs(cse7766->voltage - lastVoltage) > config.voltage_delta || fabs(cse7766->current - lastCurrent) > config.current_delta || fabs(cse7766->power - lastPower) > config.power_delta)
     {
-        if (send || fabs(cse7766->voltage - lastVoltage) > config.voltage_delta)
-        {
-            lastVoltage = cse7766->voltage;
-            mqtt->publish(mqtt->getStatTopic("voltage"), String(lastVoltage).c_str(), globalConfig.mqtt.retain);
-        }
-        if (send || fabs(cse7766->current - lastCurrent) > config.current_delta)
-        {
-            lastCurrent = cse7766->current;
-            mqtt->publish(mqtt->getStatTopic("current"), String(lastCurrent).c_str(), globalConfig.mqtt.retain);
-        }
-        if (send || fabs(cse7766->power - lastPower) > config.power_delta)
-        {
-            lastPower = cse7766->power;
-            mqtt->publish(mqtt->getStatTopic("power"), String(lastPower).c_str(), globalConfig.mqtt.retain);
-        }
+        lastVoltage = cse7766->voltage;
+        lastCurrent = cse7766->current;
+        lastPower = cse7766->power;
+
+        sprintf(tmpData, "{\"voltage\":%s,\"current\":%s,\"power\":%s,\"factor\":%s}", String(lastVoltage).c_str(), String(lastCurrent).c_str(), String(lastPower).c_str(), String(cse7766->factor).c_str());
+        mqtt->publish(mqtt->getTeleTopic("ENERGY"), tmpData, globalConfig.mqtt.retain);
     }
 }
 
@@ -591,7 +537,7 @@ void DC1::checkButton(uint8_t ch)
     }
 }
 
-const pb_field_t DC1ConfigMessage_fields[12] = {
+const pb_field_t DC1ConfigMessage_fields[11] = {
     PB_FIELD(1, UINT32, SINGULAR, STATIC, FIRST, DC1ConfigMessage, last_state, last_state, 0),
     PB_FIELD(2, UINT32, SINGULAR, STATIC, OTHER, DC1ConfigMessage, power_on_state, last_state, 0),
     PB_FIELD(3, UINT32, SINGULAR, STATIC, OTHER, DC1ConfigMessage, power_mode, power_on_state, 0),
@@ -601,8 +547,7 @@ const pb_field_t DC1ConfigMessage_fields[12] = {
     PB_FIELD(7, FLOAT, SINGULAR, STATIC, OTHER, DC1ConfigMessage, voltage_delta, cse7766_interval, 0),
     PB_FIELD(8, FLOAT, SINGULAR, STATIC, OTHER, DC1ConfigMessage, current_delta, voltage_delta, 0),
     PB_FIELD(9, FLOAT, SINGULAR, STATIC, OTHER, DC1ConfigMessage, power_delta, current_delta, 0),
-    PB_FIELD(10, UINT32, SINGULAR, STATIC, OTHER, DC1ConfigMessage, energy_merge, power_delta, 0),
-    PB_FIELD(11, UINT32, SINGULAR, STATIC, OTHER, DC1ConfigMessage, sub_kinkage, energy_merge, 0),
+    PB_FIELD(11, UINT32, SINGULAR, STATIC, OTHER, DC1ConfigMessage, sub_kinkage, power_delta, 0),
     PB_LAST_FIELD};
 
 #endif

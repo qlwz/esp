@@ -54,12 +54,11 @@ typedef struct _DC1ConfigMessage
     float voltage_delta;
     float current_delta;
     float power_delta;
-    uint8_t energy_merge;
     uint8_t sub_kinkage;
 } DC1ConfigMessage;
 
-extern const pb_field_t DC1ConfigMessage_fields[12];
-#define DC1ConfigMessage_size 63
+extern const pb_field_t DC1ConfigMessage_fields[11];
+#define DC1ConfigMessage_size 57
 
 class DC1 : public Module
 {

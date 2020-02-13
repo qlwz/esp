@@ -1,9 +1,6 @@
-
-#include "Config.h"
-#include "Debug.h"
-#include "Mqtt.h"
-#include "Ntp.h"
 #include <PubSubClient.h>
+#include "Mqtt.h"
+#include "Module.h"
 
 bool Mqtt::mqttConnect()
 {
@@ -45,7 +42,7 @@ void Mqtt::doReportHeartbeat()
 {
     char message[250];
     sprintf(message, "{\"UID\":\"%s\",\"SSID\":\"%s\",\"RSSI\":\"%s\",\"Version\":\"%s\",\"ip\":\"%s\",\"mac\":\"%s\",\"freeMem\":%d,\"uptime\":%d}",
-            UID, WiFi.SSID().c_str(), String(WiFi.RSSI()).c_str(), VERSION, WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), ESP.getFreeHeap(), millis() / 1000);
+            UID, WiFi.SSID().c_str(), String(WiFi.RSSI()).c_str(), module->getModuleVersion().c_str(), WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), ESP.getFreeHeap(), millis() / 1000);
     //Debug.AddLog(LOG_LEVEL_INFO, PSTR("%s"), message);
     publish(getTeleTopic(F("HEARTBEAT")), message);
 }

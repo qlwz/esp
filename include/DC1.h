@@ -4,9 +4,6 @@
 #ifndef _DC1_h
 #define _DC1_h
 
-#include "Arduino.h"
-#include <Ticker.h>
-#include <ESP8266WebServer.h>
 #include "Module.h"
 #include "CAT9554.h"
 #include "CSE7766.h"
@@ -97,8 +94,9 @@ public:
     uint8_t channels = 0;
 
     void init();
-    String getModuleName();
-    String getModuleCNName();
+    String getModuleName() { return F("dc1"); }
+    String getModuleCNName() { return F("DC1插线板"); }
+    String getModuleVersion() { return F("2020.02.13.1200"); }
     bool moduleLed();
 
     void loop();

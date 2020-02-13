@@ -6,8 +6,8 @@
 #define MQTT_SOCKET_TIMEOUT 5
 #define MQTT_MAX_PACKET_SIZE 768
 
-#include "Arduino.h"
 #include <PubSubClient.h>
+#include "Arduino.h"
 
 class Mqtt
 {

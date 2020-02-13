@@ -1,9 +1,6 @@
 #ifdef USE_ZINGUO
 
-#include "Debug.h"
 #include "Zinguo.h"
-#include "Mqtt.h"
-#include "Wifi.h"
 
 #pragma region 继承
 
@@ -19,21 +16,6 @@ void Zinguo::init()
     convertTemp();                  //初始化读取温度
     dispCtrl();                     //初始化输出端口
     schTicker = new Ticker();
-}
-
-String Zinguo::getModuleName()
-{
-    return F("zinguo");
-}
-
-String Zinguo::getModuleCNName()
-{
-    return F("峥果浴霸");
-}
-
-bool Zinguo::moduleLed()
-{
-    return false;
 }
 
 void Zinguo::loop()

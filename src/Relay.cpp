@@ -1,13 +1,9 @@
 #ifdef USE_RELAY
 
-#include "Debug.h"
 #include "Relay.h"
 #include "RelayButton.h"
 #include "RadioReceive.h"
-#include "Config.h"
-#include "Mqtt.h"
 #include "Ntp.h"
-#include "Led.h"
 
 #pragma region 继承
 
@@ -81,16 +77,6 @@ void Relay::init()
     }
 
     checkCanLed(true);
-}
-
-String Relay::getModuleName()
-{
-    return F("relay");
-}
-
-String Relay::getModuleCNName()
-{
-    return F("继电器");
 }
 
 bool Relay::moduleLed()

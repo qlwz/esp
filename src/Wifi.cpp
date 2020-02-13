@@ -1,11 +1,8 @@
-
-#include "Config.h"
-#include "Debug.h"
-#include "Wifi.h"
-#include "Led.h"
 #include <WiFiClient.h>
 #include <ESP8266httpUpdate.h>
 #include <DNSServer.h>
+#include "Wifi.h"
+#include "Module.h"
 
 WiFiClient Wifi::wifiClient;
 WiFiEventHandler Wifi::STAGotIP;
@@ -33,7 +30,7 @@ void Wifi::OTA(String url)
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("OTA Url: %s"), url.c_str());
     Led::blinkLED(200, 5);
     WiFiClient OTAclient;
-    if (ESPhttpUpdate.update(OTAclient, url, VERSION) == HTTP_UPDATE_FAILED)
+    if (ESPhttpUpdate.update(OTAclient, url, module->getModuleVersion()) == HTTP_UPDATE_FAILED)
     {
         Debug.AddLog(LOG_LEVEL_ERROR, PSTR("HTTP_UPDATE_FAILD Error (%d): %s"), ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
     }

@@ -1,9 +1,8 @@
-
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 #include "Config.h"
 #include "Debug.h"
 #include "Ntp.h"
-#include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
 
 WiFiUDP Udp;
 size_t DebugClass::strchrspn(const char *str1, int character)

@@ -3,9 +3,9 @@
 #ifndef _WIFI_h
 #define _WIFI_h
 
-#include "Arduino.h"
 #include <WiFiClient.h>
 #include <DNSServer.h>
+#include "Arduino.h"
 
 class Wifi
 {

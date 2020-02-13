@@ -1,8 +1,5 @@
-
-#include "Config.h"
-#include "Debug.h"
 #include <EEPROM.h>
-#include <Ticker.h>
+#include "Module.h"
 
 Module *module;
 char UID[16];
@@ -119,12 +116,12 @@ void Config::readConfig()
     }
 }
 
-boolean Config::saveConfig()
+bool Config::saveConfig()
 {
     module->saveConfig();
     uint8_t buffer[GlobalConfigMessage_size];
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-    boolean status = pb_encode(&stream, GlobalConfigMessage_fields, &globalConfig);
+    bool status = pb_encode(&stream, GlobalConfigMessage_fields, &globalConfig);
     size_t len = stream.bytes_written;
     if (!status)
     {
@@ -196,11 +193,11 @@ void Config::moduleReadConfig(uint16_t version, uint16_t size, const pb_field_t 
     }
 }
 
-boolean Config::moduleSaveConfig(uint16_t version, uint16_t size, const pb_field_t fields[], const void *src_struct)
+bool Config::moduleSaveConfig(uint16_t version, uint16_t size, const pb_field_t fields[], const void *src_struct)
 {
     uint8_t buffer[size];
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-    boolean status = pb_encode(&stream, fields, src_struct);
+    bool status = pb_encode(&stream, fields, src_struct);
     if (status)
     {
         size_t len = stream.bytes_written;

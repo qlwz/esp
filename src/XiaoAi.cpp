@@ -1,10 +1,6 @@
 #ifdef USE_XIAOAI
 
-#include "Debug.h"
-#include "Led.h"
 #include "XiaoAi.h"
-#include "Mqtt.h"
-#include "Wifi.h"
 
 #pragma region 继承
 
@@ -15,21 +11,6 @@ void XiaoAi::init()
         Led::init(config.pin_led > 30 ? config.pin_led - 30 : config.pin_led, config.pin_led > 30 ? LOW : HIGH);
     }
     Serial.println();
-}
-
-String XiaoAi::getModuleName()
-{
-    return F("xiaoai");
-}
-
-String XiaoAi::getModuleCNName()
-{
-    return F("小爱音箱");
-}
-
-bool XiaoAi::moduleLed()
-{
-    return false;
 }
 
 void XiaoAi::loop()

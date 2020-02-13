@@ -98,7 +98,7 @@ void setup()
     module = new DC1();
 #endif
 
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("\r\n\r\n---------------------  v%s  %s  -------------------"), VERSION, Ntp::GetBuildDateAndTime().c_str());
+    Debug.AddLog(LOG_LEVEL_INFO, PSTR("\r\n\r\n---------------------  v%s  %s  -------------------"), module->getModuleVersion().c_str(), Ntp::GetBuildDateAndTime().c_str());
     Config::readConfig();
     if (globalConfig.uid[0] != '\0')
     {

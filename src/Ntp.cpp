@@ -1,8 +1,7 @@
-
+#include <ESP8266WiFi.h>
 #include "Ntp.h"
 #include "sntp.h"
 #include "Debug.h"
-#include <ESP8266WiFi.h>
 
 TIME_T Ntp::rtcTime;
 uint32_t Ntp::utcTime;

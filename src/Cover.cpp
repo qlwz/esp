@@ -1,11 +1,7 @@
 #ifdef USE_COVER
 
 #include <DOOYACommand.h>
-#include "Debug.h"
-#include "Led.h"
 #include "Cover.h"
-#include "Mqtt.h"
-#include "Wifi.h"
 
 #pragma region 继承
 
@@ -25,21 +21,6 @@ void Cover::init()
     {
         Led::init(config.pin_led > 30 ? config.pin_led - 30 : config.pin_led, config.pin_led > 30 ? HIGH : LOW);
     }
-}
-
-String Cover::getModuleName()
-{
-    return F("cover");
-}
-
-String Cover::getModuleCNName()
-{
-    return F("杜亚窗帘");
-}
-
-bool Cover::moduleLed()
-{
-    return false;
 }
 
 void Cover::loop()

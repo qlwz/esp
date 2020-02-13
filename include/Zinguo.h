@@ -4,9 +4,6 @@
 #ifndef _ZINGUO_h
 #define _ZINGUO_h
 
-#include "Arduino.h"
-#include <ESP8266WebServer.h>
-#include <Ticker.h>
 #include "Module.h"
 
 #define MODULE_CFG_VERSION 2001 //2001 - 2500
@@ -120,9 +117,10 @@ private:
 
 public:
     void init();
-    String getModuleName();
-    String getModuleCNName();
-    bool moduleLed();
+    String getModuleName() { return F("zinguo"); }
+    String getModuleCNName() { return F("峥果浴霸"); }
+    String getModuleVersion() { return F("2020.02.13.1200"); }
+    bool moduleLed() { return false; }
 
     void loop();
     void perSecondDo();

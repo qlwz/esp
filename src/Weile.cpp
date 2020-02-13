@@ -1,10 +1,6 @@
 #ifdef USE_WEILE
 
-#include "Debug.h"
-#include "Led.h"
 #include "Weile.h"
-#include "Mqtt.h"
-#include "Wifi.h"
 
 #pragma region 继承
 
@@ -15,21 +11,6 @@ void Weile::init()
         Led::init(config.pin_led > 30 ? config.pin_led - 30 : config.pin_led, config.pin_led > 30 ? HIGH : LOW);
     }
     pinMode(config.pin_rel, OUTPUT); // 继电器
-}
-
-String Weile::getModuleName()
-{
-    return F("weile");
-}
-
-String Weile::getModuleCNName()
-{
-    return F("威乐回水器");
-}
-
-bool Weile::moduleLed()
-{
-    return false;
 }
 
 void Weile::loop()

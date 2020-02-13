@@ -1,13 +1,9 @@
-#include "Config.h"
-#include "Debug.h"
-#include "Mqtt.h"
-#include "Http.h"
-#include "Wifi.h"
-#include "Led.h"
-#include "Ntp.h"
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
+#include "Http.h"
+#include "Module.h"
+#include "Ntp.h"
 
 ESP8266WebServer *Http::server;
 ESP8266HTTPUpdateServer httpUpdater;
@@ -249,7 +245,7 @@ void Http::handleRoot()
     page += F("</form>");
     page += F("</tbody></table>");
     page += F("</div>");
-    page.replace(F("{v}"), VERSION);
+    page.replace(F("{v}"), module->getModuleVersion());
     page.replace(F("{v1}"), Ntp::GetBuildDateAndTime());
     page.replace(F("{ota_url}"), globalConfig.http.ota_url);
     // TAB 4 End

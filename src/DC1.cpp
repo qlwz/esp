@@ -1,11 +1,6 @@
 #ifdef USE_DC1
 
-#include "Debug.h"
 #include "DC1.h"
-#include "Mqtt.h"
-#include "Ntp.h"
-#include "Led.h"
-#include "Wifi.h"
 
 #pragma region 继承
 
@@ -55,16 +50,6 @@ void DC1::init()
             break;
         }
     }
-}
-
-String DC1::getModuleName()
-{
-    return F("dc1");
-}
-
-String DC1::getModuleCNName()
-{
-    return F("DC1插线板");
 }
 
 bool DC1::moduleLed()

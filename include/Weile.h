@@ -4,8 +4,6 @@
 #ifndef _WEILE_h
 #define _WEILE_h
 
-#include "Arduino.h"
-#include <ESP8266WebServer.h>
 #include "Module.h"
 
 #define MODULE_CFG_VERSION 2501 //2501 - 3000
@@ -68,9 +66,10 @@ private:
 
 public:
     void init();
-    String getModuleName();
-    String getModuleCNName();
-    bool moduleLed();
+    String getModuleName() { return F("weile"); }
+    String getModuleCNName() { return F("威乐回水器"); }
+    String getModuleVersion() { return F("2020.02.13.1200"); }
+    bool moduleLed() { return false; }
 
     void loop();
     void perSecondDo();

@@ -4,9 +4,7 @@
 #ifndef _COVER_h
 #define _COVER_h
 
-#include "Arduino.h"
 #include <SoftwareSerial.h>
-#include <ESP8266WebServer.h>
 #include "Module.h"
 
 #define MODULE_CFG_VERSION 1501 //1501 - 2000
@@ -77,9 +75,10 @@ private:
 
 public:
     void init();
-    String getModuleName();
-    String getModuleCNName();
-    bool moduleLed();
+    String getModuleName() { return F("cover"); }
+    String getModuleCNName() { return F("杜亚窗帘"); }
+    String getModuleVersion() { return F("2020.02.13.1200"); }
+    bool moduleLed() { return false; }
 
     void loop();
     void perSecondDo();

@@ -1,11 +1,8 @@
 #ifdef USE_RELAY
 
-#include "Debug.h"
 #include "RadioReceive.h"
-#include "RCSwitch.h"
 #include "Relay.h"
-#include "Config.h"
-#include "Led.h"
+#include "RCSwitch.h"
 
 void RadioReceive::init(Relay *_relay, uint8_t io)
 {

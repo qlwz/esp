@@ -3,12 +3,11 @@
 #ifndef _CONFIG_h
 #define _CONFIG_h
 
-#include <ESP8266WiFi.h>
+#include "Arduino.h"
 #include <Ticker.h>
 #include <pb_encode.h>
 #include <pb_decode.h>
 #include <pb.h>
-#include "Module.h"
 
 #define GLOBAL_CFG_VERSION 1 // 1 - 999
 
@@ -21,11 +20,6 @@
 //#define MQTT_PASS "" // MQTT 密码
 
 #define MQTT_FULLTOPIC "%module%/%hostname%/%prefix%/" // MQTT 主题格式
-#ifndef VERSION
-#define VERSION "2020.02.03.0000" // 版本
-#endif
-
-#define MAX_STUDY_RECEIVER_NUM 10 // 遥控最大学习数
 
 #define OTA_URL "http://10.0.0.50/esp/%module%.bin"
 
@@ -93,8 +87,6 @@ extern const pb_field_t DebugConfigMessage_fields[4];
 
 #define GlobalConfigMessage_size 1087
 
-extern Module *module;
-
 extern char UID[16];
 extern char tmpData[512];
 extern GlobalConfigMessage globalConfig;
@@ -111,10 +103,10 @@ public:
 
     static void readConfig();
     static void resetConfig();
-    static boolean saveConfig();
+    static bool saveConfig();
 
     static void moduleReadConfig(uint16_t version, uint16_t size, const pb_field_t fields[], void *dest_struct);
-    static boolean moduleSaveConfig(uint16_t version, uint16_t size, const pb_field_t fields[], const void *src_struct);
+    static bool moduleSaveConfig(uint16_t version, uint16_t size, const pb_field_t fields[], const void *src_struct);
 
     static void perSecondDo();
 };

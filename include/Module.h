@@ -3,9 +3,12 @@
 #ifndef _MODULE_h
 #define _MODULE_h
 
-#include "Arduino.h"
 #include <ESP8266WebServer.h>
 #include "Config.h"
+#include "Led.h"
+#include "Wifi.h"
+#include "Mqtt.h"
+#include "Debug.h"
 
 class Module
 {
@@ -13,6 +16,8 @@ public:
     virtual void init();
     virtual String getModuleName();
     virtual String getModuleCNName();
+    virtual String getModuleVersion();
+
     virtual bool moduleLed();
 
     virtual void loop();
@@ -30,4 +35,6 @@ public:
     virtual void mqttConnected();
     virtual void mqttDiscovery(boolean isEnable = true);
 };
+
+extern Module *module;
 #endif

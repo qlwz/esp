@@ -1,12 +1,8 @@
 #ifdef USE_RELAY
 
-#include "Debug.h"
+#include "Relay.h"
 #include "RadioReceive.h"
 #include "RelayButton.h"
-#include "Config.h"
-#include "Relay.h"
-#include "Wifi.h"
-#include "Led.h"
 
 void RelayButton::init(Relay *_relay, uint8_t _ch, uint8_t _io)
 {

@@ -4,14 +4,13 @@
 #ifndef _RELAY_h
 #define _RELAY_h
 
-#include "Arduino.h"
-#include <Ticker.h>
-#include <ESP8266WebServer.h>
 #include "Module.h"
 
 #define MODULE_CFG_VERSION 1001 //1001 - 1500
 #define MAX_GPIO_PIN 17         // Number of supported GPIO
 #define MIN_FLASH_PINS 4        // Number of flash chip pins unusable for configuration (GPIO6, 7, 8 and 11)
+
+#define MAX_STUDY_RECEIVER_NUM 10 // 遥控最大学习数
 
 const char HASS_DISCOVER_RELAY[] PROGMEM =
     "{\"name\":\"%s_%d\","
@@ -80,8 +79,9 @@ public:
     uint8_t channels = 0;
 
     void init();
-    String getModuleName();
-    String getModuleCNName();
+    String getModuleName() { return F("relay"); }
+    String getModuleCNName() { return F("继电器"); }
+    String getModuleVersion() { return F("2020.02.13.1200"); }
     bool moduleLed();
 
     void loop();

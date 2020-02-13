@@ -25,9 +25,6 @@
 
 #define WEB_LOG_SIZE 4000 // Max number of characters in weblog
 
-#define WifiManager_ConfigPortalTimeOut 120
-#define MinimumWifiSignalQuality 8
-
 typedef struct _DebugConfigMessage
 {
     uint8_t type;

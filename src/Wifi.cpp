@@ -6,9 +6,11 @@
 
 WiFiClient Wifi::wifiClient;
 WiFiEventHandler Wifi::STAGotIP;
+WiFiEventHandler Wifi::STADisconnected;
 bool Wifi::isDHCP = true;
 
 unsigned long Wifi::configPortalStart = 0;
+unsigned long Wifi::connectStart = 0;
 bool Wifi::connect = false;
 String Wifi::_ssid = "";
 String Wifi::_pass = "";
@@ -60,11 +62,21 @@ void Wifi::setupWifi()
     WiFi.hostname(UID);
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("Connecting to %s %s Wifi"), globalConfig.wifi.ssid, globalConfig.wifi.pass);
     STAGotIP = WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP &event) {
+        connectStart = 0;
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("WiFi1 connected. SSID: %s IP address: %s"), WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
         if (globalConfig.wifi.is_static && String(globalConfig.wifi.ip).equals(WiFi.localIP().toString()))
         {
             isDHCP = false;
         }
+
+        STADisconnected = WiFi.onStationModeDisconnected([](const WiFiEventStationModeDisconnected &event) {
+            if (connectStart == 0)
+            {
+                connectStart = millis() + ConnectTimeOut * 1000;
+            }
+            Debug.AddLog(LOG_LEVEL_INFO, PSTR("onStationModeDisconnected"));
+            STADisconnected = NULL;
+        });
     });
     if (globalConfig.wifi.is_static)
     {
@@ -78,6 +90,8 @@ void Wifi::setupWifi()
         Debug.AddLog(LOG_LEVEL_INFO, PSTR("Custom STA IP/GW/Subnet: %s %s %s"), globalConfig.wifi.ip, globalConfig.wifi.sn, globalConfig.wifi.gw);
         WiFi.config(static_ip, static_gw, static_sn);
     }
+
+    connectStart = millis();
     WiFi.begin(globalConfig.wifi.ssid, globalConfig.wifi.pass);
 }
 
@@ -133,6 +147,15 @@ void Wifi::tryConnect(String ssid, String pass)
 
 void Wifi::loop()
 {
+    if (connectStart > 0 && millis() > connectStart + (ConnectTimeOut * 1000))
+    {
+        connectStart = 0;
+        if (!WiFi.isConnected())
+        {
+            setupWifiManager(false);
+            return;
+        }
+    }
     if (configPortalStart == 0)
     {
         return;
@@ -172,7 +195,7 @@ void Wifi::loop()
     }
 
     // 检查是否超时
-    if (millis() > configPortalStart + (WifiManager_ConfigPortalTimeOut * 1000))
+    if (millis() > configPortalStart + (ConfigPortalTimeOut * 1000))
     {
         dnsServer->stop();
         configPortalStart = 0;

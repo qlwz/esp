@@ -7,6 +7,10 @@
 #include <DNSServer.h>
 #include "Arduino.h"
 
+#define ConnectTimeOut 300
+#define ConfigPortalTimeOut 120
+#define MinimumWifiSignalQuality 8
+
 class Wifi
 {
 private:
@@ -16,12 +20,14 @@ private:
     static String _pass;
 
     static DNSServer *dnsServer;
+    static unsigned long connectStart;
 
 public:
     static unsigned long configPortalStart;
     static void OTA(String url);
     static bool isDHCP;
     static WiFiEventHandler STAGotIP;
+    static WiFiEventHandler STADisconnected;
     static WiFiClient wifiClient;
     static void connectWifi();
     static void setupWifi();

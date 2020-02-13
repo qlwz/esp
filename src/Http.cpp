@@ -378,10 +378,8 @@ void Http::handleScanWifi()
         return;
     }
     int n = WiFi.scanNetworks();
-    Debug.AddLog(LOG_LEVEL_INFO, PSTR("Scan done"));
     if (n == 0)
     {
-        Debug.AddLog(LOG_LEVEL_INFO, PSTR("No networks found"));
         Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"\",\"data\":{\"list\":[]}}"));
         //Http::server->send(200, F("text/html"), F("{\"code\":0,\"msg\":\"找不到网络，请重新试试。\"}"));
         return;
@@ -417,7 +415,6 @@ void Http::handleScanWifi()
         {
             if (cssid == WiFi.SSID(indices[j]))
             {
-                Debug.AddLog(LOG_LEVEL_INFO, PSTR("DUP AP: %s"), WiFi.SSID(indices[j]).c_str());
                 indices[j] = -1; // set dup aps to index -1
             }
         }
@@ -428,8 +425,6 @@ void Http::handleScanWifi()
     {
         if (indices[i] == -1)
             continue; // skip dups
-        Debug.AddLog(LOG_LEVEL_INFO, PSTR("%s"), WiFi.SSID(indices[i]).c_str());
-        Debug.AddLog(LOG_LEVEL_INFO, PSTR("%d"), WiFi.RSSI(indices[i]));
         int RSSI = WiFi.RSSI(indices[i]);
         int quality;
         if (RSSI <= -100)
@@ -448,10 +443,6 @@ void Http::handleScanWifi()
         if (_minimumQuality == -1 || _minimumQuality < quality)
         {
             data += ",{\"name\":\"" + WiFi.SSID(indices[i]) + "\",\"rssi\":\"" + RSSI + "\",\"quality\":" + quality + ",\"type\":" + WiFi.encryptionType(indices[i]) + "}";
-        }
-        else
-        {
-            Debug.AddLog(LOG_LEVEL_INFO, PSTR("Skipping due to quality"));
         }
     }
 
@@ -477,7 +468,7 @@ void Http::handleWifi()
         strcpy(globalConfig.wifi.ssid, wifi.c_str());
         strcpy(globalConfig.wifi.pass, password.c_str());
         Config::saveConfig();
-        Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置WiFi信息成功。\"}"));
+        Http::server->send(200, F("text/html"), F("{\"code\":1,\"msg\":\"设置WiFi信息成功，重启模块（手动）使用新的Wifi信息连接。\"}"));
     }
     else
     {

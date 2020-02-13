@@ -1,0 +1,12 @@
+
+syntax = "proto3";
+
+import "nanopb.proto";
+
+message XiaoAiConfigMessage {
+	uint32 pin_rx = 1 [(nanopb).int_size = IS_8];
+	uint32 pin_tx = 2 [(nanopb).int_size = IS_8];
+	uint32 pin_led = 3 [(nanopb).int_size = IS_8];
+	uint32 pin_btn = 4 [(nanopb).int_size = IS_8];
+    string password = 5 [(nanopb).max_size = 32];
+}

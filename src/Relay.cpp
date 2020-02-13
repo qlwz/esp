@@ -97,6 +97,7 @@ bool Relay::moduleLed()
 {
     if (radioReceive && radioReceive->studyCH > 0)
     {
+        Led::on();
         return true;
     }
     return false;
@@ -178,6 +179,12 @@ void Relay::mqttConnected()
     {
         mqttDiscovery(true);
         mqtt->doReport();
+    }
+
+    // 连接MQTT成功重新发送状态
+    for (size_t ch = 0; ch < Relay::channels; ch++)
+    {
+        mqtt->publish(Relay::channels == 1 ? powerTopic : (powerTopic + (ch + 1)), lastState[ch] ? "ON" : "OFF", globalConfig.mqtt.retain);
     }
 }
 

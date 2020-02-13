@@ -32,6 +32,8 @@ default_envs 取值：
 1. 继电器：relay  
 2. 窗帘：cover  
 3. 果峥浴霸：zinguo  
+4. 小米AI音箱：xiaoai 
+5. DC1插线板：dc1
 
 # 如何接入HA  
 ### 方法一  

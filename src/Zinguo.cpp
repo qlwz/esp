@@ -269,7 +269,7 @@ void Zinguo::mqttDiscovery(boolean isEnable)
     {
         sprintf(message, "{\"name\":\"%s_%s\","
                          "\"stat_t\":\"%s\","
-                         "\"unit_of_measurement\":\"°C\","
+                         "\"unit_of_meas\":\"°C\","
                          "\"avty_t\":\"%s\","
                          "\"pl_avail\":\"online\","
                          "\"pl_not_avail\":\"offline\"}",

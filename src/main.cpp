@@ -1,5 +1,4 @@
 
-#include "Config.h"
 #include "Ntp.h"
 #include "Debug.h"
 #include "Led.h"
@@ -20,6 +19,8 @@
 #include "Weile.h"
 #elif defined USE_XIAOAI
 #include "XiaoAi.h"
+#elif defined USE_DC1
+#include "DC1.h"
 #else
 #error "not support module"
 #endif
@@ -93,6 +94,8 @@ void setup()
     globalConfig.debug.type = 8;
     Serial1.begin(115200);
     module = new XiaoAi();
+#elif defined USE_DC1
+    module = new DC1();
 #endif
 
     Debug.AddLog(LOG_LEVEL_INFO, PSTR("\r\n\r\n---------------------  v%s  %s  -------------------"), VERSION, Ntp::GetBuildDateAndTime().c_str());

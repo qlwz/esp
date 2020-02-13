@@ -136,7 +136,7 @@ boolean Config::saveConfig()
         uint16_t crc = crc16(buffer, len);
         if (crc == nowCrc)
         {
-            Debug.AddLog(LOG_LEVEL_INFO, PSTR("Check Config CRC . . . Same"));
+            //Debug.AddLog(LOG_LEVEL_INFO, PSTR("Check Config CRC . . . Same"));
             return true;
         }
         else
